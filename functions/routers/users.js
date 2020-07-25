@@ -102,20 +102,20 @@ exports.login = (req, res) => {
 
 
 // Add user details
-// exports.addUserDetails = (req, res) => {
-//     // vai pegar os dados formatados que o usuario passou para editar a descrição
-//     let userDetails = reduceUserDetails(req.body)
+exports.addUserDetails = (req, res) => {
+    // vai pegar os dados formatados que o usuario passou para editar a descrição
+    let userDetails = reduceUserDetails(req.body)
 
-//     // atualizar o dado do usuario com os dados passado
-//     db.doc(`/users/${req.user.handle}`).update(userDetails)
-//         .then( () => {
-//             return res.json({message: "Details added successfully"});
-//         })
-//         .catch( err => {
-//             console.error(err)
-//             return res.status(500).json({error: err.code})
-//         })
-// }
+    // atualizar o dado do usuario com os dados passado
+    db.doc(`/users/${req.user.handle}`).update(userDetails)
+        .then( () => {
+            return res.json({message: "Details added successfully"});
+        })
+        .catch( err => {
+            console.error(err)
+            return res.status(500).json({error: err.code})
+        })
+}
 
 // // Get any useer's details
 // exports.getUserDetails = (req, res) => {
@@ -159,49 +159,49 @@ exports.login = (req, res) => {
 // }
 
 // // Get own user details
-// exports.getAuthenticatedUser = (req, res) => {
+exports.getAuthenticatedUser = (req, res) => {
 
-//     let userData = {likes: [], notifications: []};
-//     // pegar o usuario que está logado
-//     db.doc(`/users/${req.user.handle}`).get()
-//         .then( doc => {
-//             if(doc.exists){
-//                 // adicionar os dados
-//                 userData.credentials = doc.data();
-//                 // retornar os likes que ele já deu
-//                 return db.collection('likes').where('userHandle', '==', req.user.handle).get()
-//             }
-//         })
-//         .then( data => {
-//             // para cada like que o user já deu, adicionar no array dentro do objeto esse dado do like
-//             data.forEach(doc => {
-//                 userData.likes.push(doc.data())
-//             })
-//             // pegar as 10 notificações desse usuario
-//             return db.collection("notifications").where('recipient', '==', req.user.handle)
-//                 .orderBy('createdAt', 'desc').limit(10).get();
-//         })
-//         .then( data => {
-//             // pegar as 10 primeiras notificações do user para passar para o frontend
-//             // colocar as notificações no array dentro do objeto
-//             data.forEach(doc => {
-//                 userData.notifications.push({
-//                     recipient: doc.data().recipient,
-//                     sender: doc.data().sender,
-//                     createdAt: doc.data().createdAt,
-//                     screamId: doc.data().screamId,
-//                     type: doc.data().type,
-//                     read: doc.data().read,
-//                     notificationId: doc.id
-//                 })
-//             })
-//             return res.json(userData)
-//         })
-//         .catch(err => {
-//             console.error(err);
-//             return res.status(500).json({error: err.code})
-//         })
-// }
+    let userData = {likes: [], notifications: []};
+    // pegar o usuario que está logado
+    db.doc(`/users/${req.user.handle}`).get()
+        .then( doc => {
+            if(doc.exists){
+                // adicionar os dados
+                userData.credentials = doc.data();
+                // retornar os likes que ele já deu
+                return db.collection('likes').where('userHandle', '==', req.user.handle).get()
+            }
+        })
+        .then( data => {
+            // para cada like que o user já deu, adicionar no array dentro do objeto esse dado do like
+            data.forEach(doc => {
+                userData.likes.push(doc.data())
+            })
+            // pegar as 10 notificações desse usuario
+            return db.collection("notifications").where('recipient', '==', req.user.handle)
+                .orderBy('createdAt', 'desc').limit(10).get();
+        })
+        .then( data => {
+            // pegar as 10 primeiras notificações do user para passar para o frontend
+            // colocar as notificações no array dentro do objeto
+            data.forEach(doc => {
+                userData.notifications.push({
+                    recipient: doc.data().recipient,
+                    sender: doc.data().sender,
+                    createdAt: doc.data().createdAt,
+                    screamId: doc.data().screamId,
+                    type: doc.data().type,
+                    read: doc.data().read,
+                    notificationId: doc.id
+                })
+            })
+            return res.json(userData)
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({error: err.code})
+        })
+}
 
 
 // // Upload proflie image
@@ -223,10 +223,8 @@ exports.uploadImage = (req, res) => {
         // validação dos tipos de arquivo
         if(mimetype !== "image/jpeg" && mimetype.type !== "image/png") return status(400).json({error: 'wrong file type submitted'})
 
-        // pegar a extensão do arquivo
-        const imageExtension = filename.split('.')[filename.split('.').length - 1]
         // alterar o nome da imagem e adicionar a extensao
-        imageFileName = `${Math.round(Math.random()*100000000000)} - ${filename}.${imageExtension}`;
+        imageFileName = `${Math.round(Math.random()*100000000000)} - ${filename}`;
 
         // path vai unir as strings e formatar para um diretorio, ex: 'Users', 'Exemple' = Users\Exemple
         // os.tmpdir() vai pegar o diretorio do sistema onde guarda arquivos temporatios
