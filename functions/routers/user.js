@@ -10,7 +10,7 @@ firebase.initializeApp(config)
 exports.signup = async (req, res) => {
 
     const {email, password, confirmPassword, handle} = req.body
-    const newUser = {email, password, confirmPassword, handle}
+    const newUser = {email, password, confirmPassword, handle, category}
 
     // função para verificar os dados
     const {valid, errors} = validateSignupData(newUser)
@@ -26,7 +26,7 @@ exports.signup = async (req, res) => {
     // se existir um usuario com o handle(nick/name)...
     if(checkIfUserExist.exists){
         // nao vai cadastrar
-        return res.status(400).json({ handle: 'this handle is already taken'})
+        return res.status(400).json({ handle: 'Este usuário já existe. tente novamente!'})
     } 
     
     try{
@@ -50,7 +50,8 @@ exports.signup = async (req, res) => {
         createdAt: new Date().toISOString(),
         // url onde o firebase vai guardar as imagens
         imageUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${noImg}?alt=media`,
-        userId
+        userId,
+        category,
         }
 
         // esperar criar um novo usuario, na collection user o nome do dado vai ser o 'handle' do user, set() vai criar um novo usuario, ao inves de get que apenas pega, com os dados do objeto criado
@@ -62,7 +63,7 @@ exports.signup = async (req, res) => {
     } catch(err){
         console.error(err)
         if (err.code === 'auth/email-already-in-use'){
-            return res.status(400).json({ email: 'Email already in use'})
+            return res.status(400).json({ email: 'Este email já existe. tente novamente.'})
         } else {
             return res.status(500).json({general: "Something went wrong"})
         }
@@ -101,195 +102,195 @@ exports.login = (req, res) => {
 
 
 // Add user details
-exports.addUserDetails = (req, res) => {
-    // vai pegar os dados formatados que o usuario passou para editar a descrição
-    let userDetails = reduceUserDetails(req.body)
+// exports.addUserDetails = (req, res) => {
+//     // vai pegar os dados formatados que o usuario passou para editar a descrição
+//     let userDetails = reduceUserDetails(req.body)
 
-    // atualizar o dado do usuario com os dados passado
-    db.doc(`/users/${req.user.handle}`).update(userDetails)
-        .then( () => {
-            return res.json({message: "Details added successfully"});
-        })
-        .catch( err => {
-            console.error(err)
-            return res.status(500).json({error: err.code})
-        })
-}
+//     // atualizar o dado do usuario com os dados passado
+//     db.doc(`/users/${req.user.handle}`).update(userDetails)
+//         .then( () => {
+//             return res.json({message: "Details added successfully"});
+//         })
+//         .catch( err => {
+//             console.error(err)
+//             return res.status(500).json({error: err.code})
+//         })
+// }
 
-// Get any useer's details
-exports.getUserDetails = (req, res) => {
-    let userData = {}
-    console.log('okaa')
-    // pegar os dados do usuario
-    db.doc(`/users/${req.params.handle}`).get()
-        .then( doc => {
-            if(doc.exists){
-                // adicionar os dados no objeto
-                userData.user = doc.data();
-                // pegar as screams que o usuario tem
-                return db.collection("screams").where('userHandle', '==', req.params.handle)
-                    .orderBy('createdAt', 'desc')
-                    .get()
-            }
-            else{
-                return res.status(404).json({error: "user not found"})
-            }
-        })
-        .then( data => {
-            userData.screams = []
-            // colocar todas as scream do usuario dentro do array 'screams' no objeto
-            data.forEach( doc => {
-                userData.screams.push({
-                    body: doc.data().body,
-                    createdAt: doc.data().createdAt,
-                    userHandle: doc.data().userHandle,
-                    userImage: doc.data().userImage,
-                    likeCount: doc.data().likeCount,
-                    commentCount: doc.data().commentCount,
-                    screamId: doc.id,
-                })
-                return res.json(userData)
-            })
-        })
-        .catch(err => {
-            console.error(err);
-            return res.status(500).json({error: err.code})
-        })
-}
+// // Get any useer's details
+// exports.getUserDetails = (req, res) => {
+//     let userData = {}
+//     console.log('okaa')
+//     // pegar os dados do usuario
+//     db.doc(`/users/${req.params.handle}`).get()
+//         .then( doc => {
+//             if(doc.exists){
+//                 // adicionar os dados no objeto
+//                 userData.user = doc.data();
+//                 // pegar as screams que o usuario tem
+//                 return db.collection("screams").where('userHandle', '==', req.params.handle)
+//                     .orderBy('createdAt', 'desc')
+//                     .get()
+//             }
+//             else{
+//                 return res.status(404).json({error: "user not found"})
+//             }
+//         })
+//         .then( data => {
+//             userData.screams = []
+//             // colocar todas as scream do usuario dentro do array 'screams' no objeto
+//             data.forEach( doc => {
+//                 userData.screams.push({
+//                     body: doc.data().body,
+//                     createdAt: doc.data().createdAt,
+//                     userHandle: doc.data().userHandle,
+//                     userImage: doc.data().userImage,
+//                     likeCount: doc.data().likeCount,
+//                     commentCount: doc.data().commentCount,
+//                     screamId: doc.id,
+//                 })
+//                 return res.json(userData)
+//             })
+//         })
+//         .catch(err => {
+//             console.error(err);
+//             return res.status(500).json({error: err.code})
+//         })
+// }
 
-// Get own user details
-exports.getAuthenticatedUser = (req, res) => {
+// // Get own user details
+// exports.getAuthenticatedUser = (req, res) => {
 
-    let userData = {likes: [], notifications: []};
-    // pegar o usuario que está logado
-    db.doc(`/users/${req.user.handle}`).get()
-        .then( doc => {
-            if(doc.exists){
-                // adicionar os dados
-                userData.credentials = doc.data();
-                // retornar os likes que ele já deu
-                return db.collection('likes').where('userHandle', '==', req.user.handle).get()
-            }
-        })
-        .then( data => {
-            // para cada like que o user já deu, adicionar no array dentro do objeto esse dado do like
-            data.forEach(doc => {
-                userData.likes.push(doc.data())
-            })
-            // pegar as 10 notificações desse usuario
-            return db.collection("notifications").where('recipient', '==', req.user.handle)
-                .orderBy('createdAt', 'desc').limit(10).get();
-        })
-        .then( data => {
-            // pegar as 10 primeiras notificações do user para passar para o frontend
-            // colocar as notificações no array dentro do objeto
-            data.forEach(doc => {
-                userData.notifications.push({
-                    recipient: doc.data().recipient,
-                    sender: doc.data().sender,
-                    createdAt: doc.data().createdAt,
-                    screamId: doc.data().screamId,
-                    type: doc.data().type,
-                    read: doc.data().read,
-                    notificationId: doc.id
-                })
-            })
-            return res.json(userData)
-        })
-        .catch(err => {
-            console.error(err);
-            return res.status(500).json({error: err.code})
-        })
-}
+//     let userData = {likes: [], notifications: []};
+//     // pegar o usuario que está logado
+//     db.doc(`/users/${req.user.handle}`).get()
+//         .then( doc => {
+//             if(doc.exists){
+//                 // adicionar os dados
+//                 userData.credentials = doc.data();
+//                 // retornar os likes que ele já deu
+//                 return db.collection('likes').where('userHandle', '==', req.user.handle).get()
+//             }
+//         })
+//         .then( data => {
+//             // para cada like que o user já deu, adicionar no array dentro do objeto esse dado do like
+//             data.forEach(doc => {
+//                 userData.likes.push(doc.data())
+//             })
+//             // pegar as 10 notificações desse usuario
+//             return db.collection("notifications").where('recipient', '==', req.user.handle)
+//                 .orderBy('createdAt', 'desc').limit(10).get();
+//         })
+//         .then( data => {
+//             // pegar as 10 primeiras notificações do user para passar para o frontend
+//             // colocar as notificações no array dentro do objeto
+//             data.forEach(doc => {
+//                 userData.notifications.push({
+//                     recipient: doc.data().recipient,
+//                     sender: doc.data().sender,
+//                     createdAt: doc.data().createdAt,
+//                     screamId: doc.data().screamId,
+//                     type: doc.data().type,
+//                     read: doc.data().read,
+//                     notificationId: doc.id
+//                 })
+//             })
+//             return res.json(userData)
+//         })
+//         .catch(err => {
+//             console.error(err);
+//             return res.status(500).json({error: err.code})
+//         })
+// }
 
 
-// Upload proflie image
-exports.uploadImage = (req, res) => {
-    // busboy é uma biblioteca que permite fazer upload de arquivos como foto
-    const BusBoy = require("busboy");
-    const path = require('path')
-    const os =require('os')
-    const fs = require('fs')
+// // Upload proflie image
+// exports.uploadImage = (req, res) => {
+//     // busboy é uma biblioteca que permite fazer upload de arquivos como foto
+//     const BusBoy = require("busboy");
+//     const path = require('path')
+//     const os =require('os')
+//     const fs = require('fs')
 
-    const busboy = new BusBoy({headers: req.headers})
+//     const busboy = new BusBoy({headers: req.headers})
 
-    // onde ficarao guardado os dados dos usuarios
-    let imageFileName;
-    let imageToBeUploaded = {};
+//     // onde ficarao guardado os dados dos usuarios
+//     let imageFileName;
+//     let imageToBeUploaded = {};
 
-    // quando mandar um 'file'...
-    busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
-        // validação dos tipos de arquivo
-        if(mimetype !== "image/jpeg" && mimetype.type !== "image/png") return status(400).json({error: 'wrong file type submitted'})
+//     // quando mandar um 'file'...
+//     busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+//         // validação dos tipos de arquivo
+//         if(mimetype !== "image/jpeg" && mimetype.type !== "image/png") return status(400).json({error: 'wrong file type submitted'})
 
-        // pegar a extensão do arquivo
-        const imageExtension = filename.split('.')[filename.split('.').length - 1]
-        // alterar o nome da imagem e adicionar a extensao
-        imageFileName = `${Math.round(Math.random()*100000000000)}.${imageExtension}`;
+//         // pegar a extensão do arquivo
+//         const imageExtension = filename.split('.')[filename.split('.').length - 1]
+//         // alterar o nome da imagem e adicionar a extensao
+//         imageFileName = `${Math.round(Math.random()*100000000000)}.${imageExtension}`;
 
-        // path vai unir as strings e formatar para um diretorio, ex: 'Users', 'Exemple' = Users\Exemple
-        // os.tmpdir() vai pegar o diretorio do sistema onde guarda arquivos temporatios
-        // vai salvar na pasta de arquivos temporarios com o nome do arquivo
-        const filepath = path.join(os.tmpdir(), imageFileName);
+//         // path vai unir as strings e formatar para um diretorio, ex: 'Users', 'Exemple' = Users\Exemple
+//         // os.tmpdir() vai pegar o diretorio do sistema onde guarda arquivos temporatios
+//         // vai salvar na pasta de arquivos temporarios com o nome do arquivo
+//         const filepath = path.join(os.tmpdir(), imageFileName);
 
-        // adicionar ao objeto o arquivo e o mimetype(ex:image/jpeg)
-        imageToBeUploaded = {filepath, mimetype}
+//         // adicionar ao objeto o arquivo e o mimetype(ex:image/jpeg)
+//         imageToBeUploaded = {filepath, mimetype}
 
-        // o pipe transforma algo readable para writeable, ou seja, ele transforma um fluxo legível para um fluxo de gravação ao coletar dados.
-        file.pipe(fs.createWriteStream(filepath))
-    })
+//         // o pipe transforma algo readable para writeable, ou seja, ele transforma um fluxo legível para um fluxo de gravação ao coletar dados.
+//         file.pipe(fs.createWriteStream(filepath))
+//     })
 
-    // quando terminar o uplaod
-    busboy.on('finish', () => {
-        // fazer upload no storage/bucket do firebase
-        admin.storage().bucket().upload(imageToBeUploaded.filepath, {
-            resumable: false,
-            metadata: {
-                metadata: {
-                    contentType: imageToBeUploaded.mimetype
-                }
-            }
-        })
+//     // quando terminar o uplaod
+//     busboy.on('finish', () => {
+//         // fazer upload no storage/bucket do firebase
+//         admin.storage().bucket().upload(imageToBeUploaded.filepath, {
+//             resumable: false,
+//             metadata: {
+//                 metadata: {
+//                     contentType: imageToBeUploaded.mimetype
+//                 }
+//             }
+//         })
         
-        .then( () => {
+//         .then( () => {
             
-            // alt midia visualiza no navegador, caso nao tenha vai baixar a imagem
-            const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
+//             // alt midia visualiza no navegador, caso nao tenha vai baixar a imagem
+//             const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
 
-            return db.doc(`/users/${req.user.handle}`).update({imageUrl})
-        })
-        .then( () => {
-            return res.json({message: "Image uploaded successfully"})
-        })
-        .catch(err=>{
+//             return db.doc(`/users/${req.user.handle}`).update({imageUrl})
+//         })
+//         .then( () => {
+//             return res.json({message: "Image uploaded successfully"})
+//         })
+//         .catch(err=>{
             
-            console.error(err)
-            return res.status(500).json({error: err.code})
-        })
-    })
+//             console.error(err)
+//             return res.status(500).json({error: err.code})
+//         })
+//     })
 
-    busboy.end(req.rawBody);
+//     busboy.end(req.rawBody);
     
-}
+// }
 
-exports.markNotificationsRead = (req, res) => {
-    // batch permite multiplas operações no database
-    let batch = db.batch()
-    // para cada id passado pelo body
-    req.body.forEach( notificationId => {
-        // pegar o dado da notificação na collection
-        const notification = db.doc(`/notifications/${notificationId}`);
-        // atualizar a notificação para read = true
-        batch.update(notification, {read: true})
-        // batch vai ficar armazenando esses update
-    })
-    // quando der commit vai lançar todas as atualizações de vez
-    batch.commit()
-        .then( () => {
-            return res.json({message: "Notifications marked read"})
-        })
-        .catch(err => {
-            console.error(err)
-            return res.status(500).json({error: err.code})
-        })
-}
+// exports.markNotificationsRead = (req, res) => {
+//     // batch permite multiplas operações no database
+//     let batch = db.batch()
+//     // para cada id passado pelo body
+//     req.body.forEach( notificationId => {
+//         // pegar o dado da notificação na collection
+//         const notification = db.doc(`/notifications/${notificationId}`);
+//         // atualizar a notificação para read = true
+//         batch.update(notification, {read: true})
+//         // batch vai ficar armazenando esses update
+//     })
+//     // quando der commit vai lançar todas as atualizações de vez
+//     batch.commit()
+//         .then( () => {
+//             return res.json({message: "Notifications marked read"})
+//         })
+//         .catch(err => {
+//             console.error(err)
+//             return res.status(500).json({error: err.code})
+//         })
+// }
