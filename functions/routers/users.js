@@ -117,48 +117,49 @@ exports.addUserDetails = (req, res) => {
         })
 }
 
-// // Get any useer's details
-// exports.getUserDetails = (req, res) => {
-//     let userData = {}
-//     console.log('okaa')
-//     // pegar os dados do usuario
-//     db.doc(`/users/${req.params.handle}`).get()
-//         .then( doc => {
-//             if(doc.exists){
-//                 // adicionar os dados no objeto
-//                 userData.user = doc.data();
-//                 // pegar as screams que o usuario tem
-//                 return db.collection("screams").where('userHandle', '==', req.params.handle)
-//                     .orderBy('createdAt', 'desc')
-//                     .get()
-//             }
-//             else{
-//                 return res.status(404).json({error: "user not found"})
-//             }
-//         })
-//         .then( data => {
-//             userData.screams = []
-//             // colocar todas as scream do usuario dentro do array 'screams' no objeto
-//             data.forEach( doc => {
-//                 userData.screams.push({
-//                     body: doc.data().body,
-//                     createdAt: doc.data().createdAt,
-//                     userHandle: doc.data().userHandle,
-//                     userImage: doc.data().userImage,
-//                     likeCount: doc.data().likeCount,
-//                     commentCount: doc.data().commentCount,
-//                     screamId: doc.id,
-//                 })
-//                 return res.json(userData)
-//             })
-//         })
-//         .catch(err => {
-//             console.error(err);
-//             return res.status(500).json({error: err.code})
-//         })
-// }
+// Get any user's details
+exports.getUserDetails = (req, res) => {
+    let userData = {}
 
-// // Get own user details
+    // pegar os dados do usuario
+    db.doc(`/users/${req.params.handle}`).get()
+        .then( doc => {
+            if(doc.exists){
+                // adicionar os dados no objeto
+                userData.user = doc.data();
+                // pegar as screams que o usuario tem
+                return db.collection("posts").where('userHandle', '==', req.params.handle)
+                    .orderBy('createdAt', 'desc')
+                    .get()
+            }
+            else{
+                return res.status(404).json({error: "user not found"})
+            }
+        })
+        .then( data => {
+            userData.posts = []
+            // colocar todas as scream do usuario dentro do array 'screams' no objeto
+            data.forEach( doc => {
+                userData.posts.push({
+                    bodyText: doc.data().bodyText,
+                    bodyImage: doc.data().bodyImage,
+                    createdAt: doc.data().createdAt,
+                    userHandle: doc.data().userHandle,
+                    userImage: doc.data().userImage,
+                    likeCount: doc.data().likeCount,
+                    commentCount: doc.data().commentCount,
+                    postId: doc.id,
+                })
+                return res.json(userData)
+            })
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({error: err.code})
+        })
+}
+
+// Get own user details
 exports.getAuthenticatedUser = (req, res) => {
 
     let userData = {likes: [], notifications: []};
@@ -204,7 +205,7 @@ exports.getAuthenticatedUser = (req, res) => {
 }
 
 
-// // Upload proflie image
+// Upload proflie image
 exports.uploadImage = (req, res) => {
     // busboy é uma biblioteca que permite fazer upload de arquivos como foto
     const BusBoy = require("busboy");
@@ -271,24 +272,24 @@ exports.uploadImage = (req, res) => {
     
 }
 
-// exports.markNotificationsRead = (req, res) => {
-//     // batch permite multiplas operações no database
-//     let batch = db.batch()
-//     // para cada id passado pelo body
-//     req.body.forEach( notificationId => {
-//         // pegar o dado da notificação na collection
-//         const notification = db.doc(`/notifications/${notificationId}`);
-//         // atualizar a notificação para read = true
-//         batch.update(notification, {read: true})
-//         // batch vai ficar armazenando esses update
-//     })
-//     // quando der commit vai lançar todas as atualizações de vez
-//     batch.commit()
-//         .then( () => {
-//             return res.json({message: "Notifications marked read"})
-//         })
-//         .catch(err => {
-//             console.error(err)
-//             return res.status(500).json({error: err.code})
-//         })
-// }
+exports.markNotificationsRead = (req, res) => {
+    // batch permite multiplas operações no database
+    let batch = db.batch()
+    // para cada id passado pelo body
+    req.body.forEach( notificationId => {
+        // pegar o dado da notificação na collection
+        const notification = db.doc(`/notifications/${notificationId}`);
+        // atualizar a notificação para read = true
+        batch.update(notification, {read: true})
+        // batch vai ficar armazenando esses update
+    })
+    // quando der commit vai lançar todas as atualizações de vez
+    batch.commit()
+        .then( () => {
+            return res.json({message: "Notifications marked read"})
+        })
+        .catch(err => {
+            console.error(err)
+            return res.status(500).json({error: err.code})
+        })
+}

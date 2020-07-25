@@ -24,7 +24,9 @@ const {
   login,
   uploadImage,
   addUserDetails,
-  getAuthenticatedUser
+  getAuthenticatedUser,
+  getUserDetails,
+  markNotificationsRead
 } = require('./routers/users')
 
 
@@ -56,10 +58,10 @@ app.post('/user/image', FirebaseAuth, uploadImage)
 app.post('/user', FirebaseAuth, addUserDetails) 
 // descrição do usuario atual (logado)
 app.get('/user', FirebaseAuth, getAuthenticatedUser) 
-// // pegar descrição/dados de outro usuario
-// app.get('/user/:handle', getUserDetails)
-// // marcar notificações como lida
-// app.post('/notifications', FirebaseAuth, markNotificationsRead)
+// pegar descrição/dados de outro usuario
+app.get('/user/:handle', getUserDetails)
+// marcar notificações como lida
+app.post('/notifications', FirebaseAuth, markNotificationsRead)
 
 
 exports.api = functions.https.onRequest(app)
