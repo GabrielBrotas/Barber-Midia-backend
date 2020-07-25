@@ -9,7 +9,7 @@ firebase.initializeApp(config)
 // Sign up new user
 exports.signup = async (req, res) => {
 
-    const {email, password, confirmPassword, handle} = req.body
+    const {email, password, confirmPassword, handle, category} = req.body
     const newUser = {email, password, confirmPassword, handle, category}
 
     // função para verificar os dados
@@ -96,7 +96,7 @@ exports.login = (req, res) => {
         .catch(err => {
             console.error(err);
             // auth/wrong-password
-            return res.status(403).json({general: "Wrong credentials. Please try again."})
+            return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
         })
 }
 
@@ -205,73 +205,73 @@ exports.login = (req, res) => {
 
 
 // // Upload proflie image
-// exports.uploadImage = (req, res) => {
-//     // busboy é uma biblioteca que permite fazer upload de arquivos como foto
-//     const BusBoy = require("busboy");
-//     const path = require('path')
-//     const os =require('os')
-//     const fs = require('fs')
+exports.uploadImage = (req, res) => {
+    // busboy é uma biblioteca que permite fazer upload de arquivos como foto
+    const BusBoy = require("busboy");
+    const path = require('path')
+    const os =require('os')
+    const fs = require('fs')
 
-//     const busboy = new BusBoy({headers: req.headers})
+    const busboy = new BusBoy({headers: req.headers})
 
-//     // onde ficarao guardado os dados dos usuarios
-//     let imageFileName;
-//     let imageToBeUploaded = {};
+    // onde ficarao guardado os dados dos usuarios
+    let imageFileName;
+    let imageToBeUploaded = {};
 
-//     // quando mandar um 'file'...
-//     busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
-//         // validação dos tipos de arquivo
-//         if(mimetype !== "image/jpeg" && mimetype.type !== "image/png") return status(400).json({error: 'wrong file type submitted'})
+    // quando mandar um 'file'...
+    busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+        // validação dos tipos de arquivo
+        if(mimetype !== "image/jpeg" && mimetype.type !== "image/png") return status(400).json({error: 'wrong file type submitted'})
 
-//         // pegar a extensão do arquivo
-//         const imageExtension = filename.split('.')[filename.split('.').length - 1]
-//         // alterar o nome da imagem e adicionar a extensao
-//         imageFileName = `${Math.round(Math.random()*100000000000)}.${imageExtension}`;
+        // pegar a extensão do arquivo
+        const imageExtension = filename.split('.')[filename.split('.').length - 1]
+        // alterar o nome da imagem e adicionar a extensao
+        imageFileName = `${Math.round(Math.random()*100000000000)} - ${filename}.${imageExtension}`;
 
-//         // path vai unir as strings e formatar para um diretorio, ex: 'Users', 'Exemple' = Users\Exemple
-//         // os.tmpdir() vai pegar o diretorio do sistema onde guarda arquivos temporatios
-//         // vai salvar na pasta de arquivos temporarios com o nome do arquivo
-//         const filepath = path.join(os.tmpdir(), imageFileName);
+        // path vai unir as strings e formatar para um diretorio, ex: 'Users', 'Exemple' = Users\Exemple
+        // os.tmpdir() vai pegar o diretorio do sistema onde guarda arquivos temporatios
+        // vai salvar na pasta de arquivos temporarios com o nome do arquivo
+        const filepath = path.join(os.tmpdir(), imageFileName);
 
-//         // adicionar ao objeto o arquivo e o mimetype(ex:image/jpeg)
-//         imageToBeUploaded = {filepath, mimetype}
+        // adicionar ao objeto o arquivo e o mimetype(ex:image/jpeg)
+        imageToBeUploaded = {filepath, mimetype}
 
-//         // o pipe transforma algo readable para writeable, ou seja, ele transforma um fluxo legível para um fluxo de gravação ao coletar dados.
-//         file.pipe(fs.createWriteStream(filepath))
-//     })
+        // o pipe transforma algo readable para writeable, ou seja, ele transforma um fluxo legível para um fluxo de gravação ao coletar dados.
+        file.pipe(fs.createWriteStream(filepath))
+    })
 
-//     // quando terminar o uplaod
-//     busboy.on('finish', () => {
-//         // fazer upload no storage/bucket do firebase
-//         admin.storage().bucket().upload(imageToBeUploaded.filepath, {
-//             resumable: false,
-//             metadata: {
-//                 metadata: {
-//                     contentType: imageToBeUploaded.mimetype
-//                 }
-//             }
-//         })
+    // quando terminar o uplaod
+    busboy.on('finish', () => {
+        // fazer upload no storage/bucket do firebase
+        admin.storage().bucket().upload(imageToBeUploaded.filepath, {
+            resumable: false,
+            metadata: {
+                metadata: {
+                    contentType: imageToBeUploaded.mimetype
+                }
+            }
+        })
         
-//         .then( () => {
+        .then( () => {
             
-//             // alt midia visualiza no navegador, caso nao tenha vai baixar a imagem
-//             const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
+            // alt midia visualiza no navegador, caso nao tenha vai baixar a imagem
+            const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
 
-//             return db.doc(`/users/${req.user.handle}`).update({imageUrl})
-//         })
-//         .then( () => {
-//             return res.json({message: "Image uploaded successfully"})
-//         })
-//         .catch(err=>{
+            return db.doc(`/users/${req.user.handle}`).update({imageUrl})
+        })
+        .then( () => {
+            return res.json({message: "Image uploaded successfully"})
+        })
+        .catch(err=>{
             
-//             console.error(err)
-//             return res.status(500).json({error: err.code})
-//         })
-//     })
+            console.error(err)
+            return res.status(500).json({error: err.code})
+        })
+    })
 
-//     busboy.end(req.rawBody);
+    busboy.end(req.rawBody);
     
-// }
+}
 
 // exports.markNotificationsRead = (req, res) => {
 //     // batch permite multiplas operações no database

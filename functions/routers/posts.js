@@ -1,7 +1,6 @@
 const {db} = require('../util/admin')
 
 exports.getAllPosts = (req, res) => {
-    
     // db.collection(<nome da collection>) para acessá-la
     db.collection('posts')
         // ordenar
@@ -37,20 +36,12 @@ exports.addNewPost = (req, res) => {
         return res.status(400).json({general: "O conteúdo não pode estar vazio"})
     }
 
-    // const newScream = {
-    //     body: req.body.body,
-    //     userHandle: req.user.handle,
-    //     userImage: req.user.imageUrl,
-    //     createdAt: new Date().toISOString(),
-    //     likeCount: 0,
-    //     commentCount: 0
-    // };
-    const {bodyImage, bodyText, userHandle, userImage} = req.body
+    const {bodyImage, bodyText} = req.body
     const newPost = {
-        bodyText,
         bodyImage,
-        userHandle,
-        userImage,
+        bodyText,
+        userHandle: req.user.handle,
+        userImage: req.user.imageUrl,
         createdAt: new Date().toISOString(),
         likeCount: 0,
         commentCount: 0
@@ -122,12 +113,12 @@ exports.deleteOnePost = (req, res) => {
                 return res.status(404).json({erro: "Post não encontrado"})
             }
             // se nao for o dono da Post retornar 403...
-            // if(doc.data().userHandle !== req.user.handle) {
-            //     return res.status(403).json({error: "Voce nao tem permissão para fazer isso."})
-            // } else {
-            //     // deletar o documento
-            //     return document.delete();
-            // }
+            if(doc.data().userHandle !== req.user.handle) {
+                return res.status(403).json({error: "Voce nao tem permissão para fazer isso."})
+            } else {
+                // deletar o documento
+                return document.delete();
+            }
             return document.delete();
         })
         .then( () => {
