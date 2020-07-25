@@ -17,7 +17,7 @@ module.exports = (req, res, next) => {
         .then( decodedToken => {
             // dentro do decodedToken vai ter eos dados do user, vamos adicionar os dados para o request router ter acesso
             req.user = decodedToken;
-            console.log(req.user)
+
             // o user handle nao fica do decoded token entao vamos fazer uma requisicao ao database
             return db.collection('users')
                 .where('userId', '==', req.user.uid)

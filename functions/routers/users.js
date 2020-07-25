@@ -127,7 +127,7 @@ exports.getUserDetails = (req, res) => {
             if(doc.exists){
                 // adicionar os dados no objeto
                 userData.user = doc.data();
-                // pegar as screams que o usuario tem
+                // pegar os posts que o usuario tem
                 return db.collection("posts").where('userHandle', '==', req.params.handle)
                     .orderBy('createdAt', 'desc')
                     .get()
@@ -138,7 +138,7 @@ exports.getUserDetails = (req, res) => {
         })
         .then( data => {
             userData.posts = []
-            // colocar todas as scream do usuario dentro do array 'screams' no objeto
+            // colocar todos os posts do usuario dentro do array 'posts' no objeto
             data.forEach( doc => {
                 userData.posts.push({
                     bodyText: doc.data().bodyText,
@@ -190,7 +190,7 @@ exports.getAuthenticatedUser = (req, res) => {
                     recipient: doc.data().recipient,
                     sender: doc.data().sender,
                     createdAt: doc.data().createdAt,
-                    screamId: doc.data().screamId,
+                    postId: doc.data().postId,
                     type: doc.data().type,
                     read: doc.data().read,
                     notificationId: doc.id

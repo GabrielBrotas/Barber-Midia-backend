@@ -23,7 +23,7 @@ exports.getAllPosts = (req, res) => {
                     userImage: doc.data().userImage,
                 });
             })
-            // retornar em um json todos os dados da collection 'screams'
+            // retornar em um json todos os dados da collection 'posts'
             return res.json(posts);
         })
         .catch( err => console.error(err))
@@ -31,7 +31,7 @@ exports.getAllPosts = (req, res) => {
 
 exports.addNewPost = (req, res) => {
     
-    // remover todos os espaços em branco para evitar mandar uma scream vazia
+    // remover todos os espaços em branco para evitar mandar um post vazio
     if(req.body.bodyText.trim() === "" && req.body.bodyImage.trim() === ""){
         return res.status(400).json({general: "O conteúdo não pode estar vazio"})
     }
@@ -80,11 +80,11 @@ exports.getOnePost = (req, res) => {
             // adicionar o id do post ao objeto
             postData.postId = doc.id;
             console.log(postData)
-            // pegar os comentarios dessa scream
+            // pegar os comentarios desse post
             return db.collection('comments')
                 .orderBy('createdAt', 'desc')
                 // pegar os comentarios onde o id é igual ao passado pelo parametro
-                .where('screamId', '==', req.params.postId)
+                .where('postId', '==', req.params.postId)
                 .get()
         })
         .then( data => {
@@ -140,9 +140,9 @@ exports.likePost = (req, res) => {
         // e o postId é igual ao passado pelo parametro
         .where('postId', '==', req.params.postId)
         .limit(1);
-
-    // vai pegar o documento do id passado
-    const postDocument = db.doc(`/screams/${req.params.postId}`);
+    
+    // vai pegar o post do id passado
+    const postDocument = db.doc(`/posts/${req.params.postId}`);
 
     // para adicionar os dados do post
     let postData = {};
@@ -163,6 +163,7 @@ exports.likePost = (req, res) => {
             }
         })
         .then( data => {
+
             // se esses dados estiverem vazio, ou seja, se o usuario nao deu like na post
             if(data.empty){
                 // adicionar na collection 'likes' um novo like com o id do post e o nome do user
@@ -174,7 +175,7 @@ exports.likePost = (req, res) => {
                     // aumentar o numero de likes do post no objeto criado
                     postData.likeCount++
                     // atualizar no banco de dados real do firebase com o numero de likes
-                    return screamDocument.update({likeCount: postData.likeCount});
+                    return postDocument.update({likeCount: postData.likeCount});
                 })
                 .then( () => {
                     return res.json(postData)
@@ -197,11 +198,11 @@ exports.unlikePost = (req, res) => {
         .where('postId', '==', req.params.postId)
         .limit(1);
     
-    const screamDocument = db.doc(`/screams/${req.params.postId}`);
+    const postDocument = db.doc(`/posts/${req.params.postId}`);
 
     let postData = {};
 
-    screamDocument.get()
+    postDocument.get()
         .then( doc => {
             if(doc.exists){
                 // pegar os dados da screeam
@@ -219,10 +220,10 @@ exports.unlikePost = (req, res) => {
             } else {
                 return db.doc(`likes/${data.docs[0].id}`).delete()
                     .then( () => {
-                        // nos objeto da scream subtrair a qtd de likes
+                        // nos objeto do post subtrair a qtd de likes
                         postData.likeCount--;
                         // atualizar os dados do db
-                        return screamDocument.update({likeCount: postData.likeCount})
+                        return postDocument.update({likeCount: postData.likeCount})
                     })
                     .then( () => {
                         res.json(postData)
@@ -236,7 +237,7 @@ exports.unlikePost = (req, res) => {
 
 }
 
-// comment on a scream, os comentarios vao ficar salvos em outra collection para tornar o app mais eficiente, caso seja um grande app com mais de 1k de comments para requisitar um post demoraria bastante e causaria mais por conta do trafego pelo request.
+// comment on a post, os comentarios vao ficar salvos em outra collection para tornar o app mais eficiente, caso seja um grande app com mais de 1k de comments para requisitar um post demoraria bastante e causaria mais por conta do trafego pelo request.
 exports.commentOnPost = (req, res) => {
     // verificar se o comentario é nulo
     if(req.body.bodyText.trim() === "") return res.status(400).json({comment: "Comentario vazio"})
@@ -260,7 +261,7 @@ exports.commentOnPost = (req, res) => {
             return doc.ref.update({commentCount: doc.data().commentCount + 1})
         })
         .then(() => {
-            // na collection('comments) adicionar um novo comentario com o objeto que criamos que tem os dados da scream
+            // na collection('comments) adicionar um novo comentario com o objeto que criamos que tem os dados do post
             return db.collection('comments').add(newComment)
         })
         .then( () => {
