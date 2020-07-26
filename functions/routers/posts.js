@@ -14,8 +14,8 @@ exports.getAllPosts = (req, res) => {
                 // para cada documento dentro dos dados colocar deentro do array criado
                 posts.push({
                     postId: doc.id,
-                    bodyImage: doc.data().body,
-                    bodyText: doc.data().body,
+                    bodyImage: doc.data().bodyImage,
+                    bodyText: doc.data().bodyText,
                     userHandle: doc.data().userHandle,
                     createdAt: doc.data().createdAt,
                     commentCount: doc.data().commentCount,
