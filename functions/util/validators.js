@@ -23,17 +23,17 @@ exports.validateSignupData = (data) => {
     let errors = {}
 
     // checar se email vazio
-    if(isEmpty(data.email)) errors.email = "Nao pode ser vazio" 
+    if(isEmpty(data.email)) errors.email = "Email inválido." 
     // checar se é um email valido
     else if (!isEmail(data.email)) errors.email = 'Digite um email valido'
 
     // checar se a senha esta vazia
-    if(isEmpty(data.password)) errors.password = "Nao pode ser vazio"
+    if(isEmpty(data.password)) errors.password = "Senha inválida."
     // se as senhas batem
     if(data.password !== data.confirmPassword) errors.confirmPassword = "As senhas estão divergentes"
-    // se o nome do usuario está vazio
-    if(isEmpty(data.handle)) errors.handle = "Nao pode ser vazio"
-
+    // se o nome do uome inválido.
+    if(isEmpty(data.handle)) errors.handle = "Nome inválido"
+    if(isEmpty(data.category)) errors.category = "Selecione uma categoria"
     return {
         errors,
         valid: Object.keys(errors).length === 0 ? true : false

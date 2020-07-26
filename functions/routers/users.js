@@ -18,7 +18,7 @@ exports.signup = async (req, res) => {
     if(!valid) return res.status(400).json(errors)
 
     // imagem default para todos os usuarios(essa imagem já foi dada upload no db)
-    const noImg = "no-img.png"
+    const noImg = "no-img.jpg"
     
     // doc passando o caminho da collection e pegar o dado dessa collection com o nome do user handle
     const checkIfUserExist = await db.doc(`/users/${newUser.handle}`).get()
