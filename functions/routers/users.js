@@ -221,8 +221,9 @@ exports.uploadImage = (req, res) => {
 
     // quando mandar um 'file'...
     busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+        const imageExtension = filename.split('.')[1]
         // validação dos tipos de arquivo
-        if(mimetype !== "image/jpeg" && mimetype.type !== "image/png") return status(400).json({error: 'wrong file type submitted'})
+        if(mimetype !== "image/jpeg" && mimetype.type !== "image/png" && imageExtension !== 'png') return res.status(400).json({error: 'wrong file type submitted'})
 
         // alterar o nome da imagem e adicionar a extensao
         imageFileName = `${Math.round(Math.random()*100000000000)} - ${filename}`;
@@ -250,13 +251,16 @@ exports.uploadImage = (req, res) => {
                 }
             }
         })
-        
         .then( () => {
-            
             // alt midia visualiza no navegador, caso nao tenha vai baixar a imagem
             const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
 
-            return db.doc(`/users/${req.user.handle}`).update({imageUrl})
+            const postId = req.params.postPicture
+            // imagem para um post
+            if(postId){
+                return db.doc(`/posts/${postId}`).update({bodyImage: imageUrl})
+            } else return db.doc(`/users/${req.user.handle}`).update({imageUrl})
+            
         })
         .then( () => {
             return res.json({message: "Image uploaded successfully"})

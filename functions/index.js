@@ -53,7 +53,7 @@ app.post('/signup', signup)
 // logar
 app.post('/login', login)
 // atualizar imagem do perfil
-app.post('/user/image', FirebaseAuth, uploadImage)
+app.post('/user/image/:postPicture?', FirebaseAuth, uploadImage)
 // editar descrição do user
 app.post('/user', FirebaseAuth, addUserDetails) 
 // descrição do usuario atual (logado)

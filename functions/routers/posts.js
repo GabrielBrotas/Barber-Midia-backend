@@ -32,11 +32,12 @@ exports.getAllPosts = (req, res) => {
 exports.addNewPost = (req, res) => {
     
     // remover todos os espaços em branco para evitar mandar um post vazio
-    if(req.body.bodyText.trim() === "" && req.body.bodyImage.trim() === ""){
+    if(req.body.bodyText.trim() === "" ){
         return res.status(400).json({general: "O conteúdo não pode estar vazio"})
     }
 
-    const {bodyImage, bodyText} = req.body
+    const {bodyText, bodyImage = null} = req.body
+    console.log(bodyImage)
     const newPost = {
         bodyImage,
         bodyText,
