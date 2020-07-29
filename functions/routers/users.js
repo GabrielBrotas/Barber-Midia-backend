@@ -255,11 +255,14 @@ exports.uploadImage = (req, res) => {
             // alt midia visualiza no navegador, caso nao tenha vai baixar a imagem
             const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
 
-            const postId = req.params.postPicture
+            const postIdFromUrl = req.params.postId
+
             // imagem para um post
-            if(postId){
-                return db.doc(`/posts/${postId}`).update({bodyImage: imageUrl})
-            } else return db.doc(`/users/${req.user.handle}`).update({imageUrl})
+            if(postIdFromUrl){
+                return db.doc(`/posts/${postIdFromUrl}`).update({bodyImage: imageUrl})
+            } else {
+                return db.doc(`/users/${req.user.handle}`).update({imageUrl})
+            } 
             
         })
         .then( () => {

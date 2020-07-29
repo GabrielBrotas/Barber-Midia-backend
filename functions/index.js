@@ -35,6 +35,8 @@ const {
 app.get('/posts', getAllPosts)
 // criar um novo post
 app.post('/post', FirebaseAuth, addNewPost)
+// adicionar foto no post
+app.post('/post/image/:postId', FirebaseAuth, uploadImage)
 // pegar um unico post
 app.get('/post/:postId', getOnePost);
 // deletar post
@@ -52,7 +54,7 @@ app.post('/post/:postId/comment', FirebaseAuth, commentOnPost)
 app.post('/signup', signup)
 // logar
 app.post('/login', login)
-// atualizar imagem do perfil
+// atualizar imagem do perfil ou adicionar foto no post
 app.post('/user/image/:postPicture?', FirebaseAuth, uploadImage)
 // editar descrição do user
 app.post('/user', FirebaseAuth, addUserDetails) 

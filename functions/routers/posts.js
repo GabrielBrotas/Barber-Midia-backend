@@ -80,7 +80,6 @@ exports.getOnePost = (req, res) => {
             postData = doc.data();
             // adicionar o id do post ao objeto
             postData.postId = doc.id;
-            console.log(postData)
             // pegar os comentarios desse post
             return db.collection('comments')
                 .orderBy('createdAt', 'desc')
