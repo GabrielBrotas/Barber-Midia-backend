@@ -6,6 +6,33 @@ const {validateSignupData, validateLoginData, reduceUserDetails} = require('../u
 
 firebase.initializeApp(config)
 
+// take users
+exports.getAllUsers = (req, res) => {
+    // db.collection(<nome da collection>) para acessá-la
+    db.collection('users')
+        // ordenar
+        .orderBy('createdAt', 'desc')
+        // .get() para pegar todos os dados da collection
+        .get()
+        .then( data => {
+            // array para armazenar os dados
+            let users = []
+            data.forEach( doc => {
+                // para cada documento dentro dos dados colocar deentro do array criado
+                users.push({
+                    userId: doc.data().userId,
+                    handle: doc.data().handle,
+                    category: doc.data().category,
+                    email: doc.data().email,
+                    imageUrl: doc.data().imageUrl,
+                    createdAt: doc.data().createdAt,
+                });
+            })
+            // retornar em um json todos os dados da collection 'posts'
+            return res.json(users);
+        })
+        .catch( err => console.error(err))
+}
 // Sign up new user
 exports.signup = async (req, res) => {
 

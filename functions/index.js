@@ -20,6 +20,7 @@ const {
 } = require('./routers/posts')
 
 const {
+  getAllUsers,
   signup,
   login,
   uploadImage,
@@ -49,7 +50,8 @@ app.get('/post/:postId/unlike', FirebaseAuth, unlikePost)
 app.post('/post/:postId/comment', FirebaseAuth, commentOnPost)
 
 // *User Router
-
+// pegar todos os usuarios que
+app.get('/users', getAllUsers)
 // registrar
 app.post('/signup', signup)
 // logar
