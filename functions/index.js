@@ -27,7 +27,8 @@ const {
   addUserDetails,
   getAuthenticatedUser,
   getUserDetails,
-  markNotificationsRead
+  markNotificationsRead,
+  getUserPlace
 } = require('./routers/users')
 
 
@@ -66,6 +67,8 @@ app.get('/user', FirebaseAuth, getAuthenticatedUser)
 app.get('/user/:handle', getUserDetails)
 // marcar notificações como lida
 app.post('/notifications', FirebaseAuth, markNotificationsRead)
+// pegar local
+app.get('/users/places', getUserPlace)
 
 
 exports.api = functions.https.onRequest(app)

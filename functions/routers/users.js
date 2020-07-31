@@ -327,3 +327,30 @@ exports.markNotificationsRead = (req, res) => {
             return res.status(500).json({error: err.code})
         })
 }
+
+// take users
+exports.getUserPlace = (req, res) => {
+    // db.collection(<nome da collection>) para acessá-la
+    db.collection('places')
+        // ordenar
+        .orderBy('createdAt', 'desc')
+        // .get() para pegar todos os dados da collection
+        .get()
+        .then( data => {
+            // array para armazenar os dados
+            let places = []
+            data.forEach( doc => {
+                // para cada documento dentro dos dados colocar deentro do array criado
+                places.push({
+                    userOwner: doc.data().userOwner,
+                    category: doc.data().category,
+                    lat: doc.data().lat,
+                    lng: doc.data().lng,
+                    createdAt: doc.data().createdAt,
+                });
+            })
+            // retornar em um json todos os dados da collection 'posts'
+            return res.json(places);
+        })
+        .catch( err => console.error(err))
+}
