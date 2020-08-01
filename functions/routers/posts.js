@@ -29,6 +29,32 @@ exports.getAllPosts = (req, res) => {
         .catch( err => console.error(err))
 }
 
+exports.getAllComments = (req, res) => {
+    // db.collection(<nome da collection>) para acessá-la
+    db.collection('comments')
+        // ordenar
+        .orderBy('createdAt', 'desc')
+        // .get() para pegar todos os dados da collection
+        .get()
+        .then( data => {
+            // array para armazenar os dados
+            let comments = []
+            data.forEach( doc => {
+                // para cada documento dentro dos dados colocar deentro do array criado
+                comments.push({
+                    postId: doc.data().postId,
+                    bodyText: doc.data().bodyText,
+                    userHandle: doc.data().userHandle,
+                    userImage: doc.data().userImage,
+                    createdAt: doc.data().createdAt,
+                });
+            })
+            // retornar em um json todos os dados da collection 'posts'
+            return res.json(comments);
+        })
+        .catch( err => console.error(err))
+}
+
 exports.addNewPost = (req, res) => {
     
     // remover todos os espaços em branco para evitar mandar um post vazio
