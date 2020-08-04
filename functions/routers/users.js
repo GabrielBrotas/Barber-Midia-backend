@@ -2,7 +2,7 @@ const firebase = require('firebase')
 
 const {admin, db} = require('../util/admin')
 const config = require('../util/config')
-const {validateSignupData, validateLoginData, reduceUserDetails} = require('../util/validators')
+const {validateSignupData, validateLoginData, reduceUserDetails, validateLocationData} = require('../util/validators')
 
 firebase.initializeApp(config)
 
@@ -33,6 +33,7 @@ exports.getAllUsers = (req, res) => {
         })
         .catch( err => console.error(err))
 }
+
 // Sign up new user
 exports.signup = async (req, res) => {
 
@@ -99,6 +100,44 @@ exports.signup = async (req, res) => {
     // feito isso vai criar uma autenticação para o usuario
 }
 
+// Save location
+exports.saveLocation = async (req, res, next) => {
+
+    const {category, description, userOwner, title, lat, lng, location} = req.body
+    const newPlace = {category, description, userOwner, title, lat, lng, location}
+
+    // função para verificar os dados
+    const {valid, errors} = validateLocationData(newPlace)
+    // se nao tiver valido retornar os erros...
+    if(!valid) return res.status(400).json(errors)
+    
+    try {
+        // doc passando o caminho da collection e pegar o dado dessa collection com o nome do user handle
+        const allPlaces = await db.collection('places').get()
+
+        allPlaces.forEach( doc => {
+            if (doc.data().title === title) {
+                throw new Error('Essa barbearia já esta cadastrada. tente novamente!')
+            }
+        })
+        db.collection('places')
+        .add(newPlace)
+        .then( (doc) => {
+            const newPlaceResponse = newPlace;
+            // adicionar o Id do documento criado no objeto
+            newPlaceResponse.placeId = doc.id;
+            res.json(newPlaceResponse)
+        }).catch( err => {
+            res.status(500).json({error: 'Algo deu errado ! ' + err})
+            console.error(err)
+        })
+
+    } catch(err) {
+        next(err)
+    }
+
+}
+
 // Log user in
 exports.login = (req, res) => {
     const {email, password} = req.body
@@ -113,10 +152,8 @@ exports.login = (req, res) => {
         .then( data => {
             // pegear o token
             return data.user.getIdToken()
-
         })
         .then(token => {
-
             // retornar o token
             return res.json({token})
         })
@@ -328,7 +365,7 @@ exports.markNotificationsRead = (req, res) => {
         })
 }
 
-// take users
+// take users place
 exports.getUserPlace = (req, res) => {
     // db.collection(<nome da collection>) para acessá-la
     db.collection('places')

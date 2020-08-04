@@ -40,6 +40,24 @@ exports.validateSignupData = (data) => {
     }
 }
 
+exports.validateLocationData = (data) => {
+
+    // check erros...
+    let errors = {}
+
+    // checar se email vazio
+    if(isEmpty(data.category)) errors.category = "Categoria inválida." 
+    // checar se é um email valido
+    else if (isEmpty(data.title)) errors.title = 'Nome invalido'
+    // checar se é um email valido
+    else if (isEmpty(data.location)) errors.title = 'Localização invalida'
+
+    return {
+        errors,
+        valid: Object.keys(errors).length === 0 ? true : false
+    }
+}
+
 
 exports.validateLoginData = (data) => {
     let errors = {};

@@ -63,7 +63,7 @@ exports.addNewPost = (req, res) => {
     }
 
     const {bodyText, bodyImage = null} = req.body
-    console.log(bodyImage)
+
     const newPost = {
         bodyImage,
         bodyText,

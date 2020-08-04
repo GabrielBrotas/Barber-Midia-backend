@@ -29,7 +29,8 @@ const {
   getAuthenticatedUser,
   getUserDetails,
   markNotificationsRead,
-  getUserPlace
+  getUserPlace,
+  saveLocation
 } = require('./routers/users')
 
 
@@ -57,6 +58,8 @@ app.get('/comments', getAllComments)
 app.get('/users', getAllUsers)
 // registrar
 app.post('/signup', signup)
+// registrar locaiton
+app.post('/savelocation', saveLocation)
 // logar
 app.post('/login', login)
 // atualizar imagem do perfil ou adicionar foto no post
