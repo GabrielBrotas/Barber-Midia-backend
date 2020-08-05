@@ -46,7 +46,7 @@ exports.signup = async (req, res) => {
     if(!valid) return res.status(400).json(errors)
 
     // imagem default para todos os usuarios(essa imagem já foi dada upload no db)
-    const noImg = "no-img.jpg"
+    const noImg = "no-img.png"
     
     // doc passando o caminho da collection e pegar o dado dessa collection com o nome do user handle
     const checkIfUserExist = await db.doc(`/users/${newUser.handle}`).get()
@@ -103,8 +103,8 @@ exports.signup = async (req, res) => {
 // Save location
 exports.saveLocation = async (req, res, next) => {
 
-    const {category, description, userOwner, title, lat, lng, location} = req.body
-    const newPlace = {category, description, userOwner, title, lat, lng, location}
+    const {category, description, handle, title, lat, lng} = req.body
+    const newPlace = {category, description, handle, title, lat, lng}
 
     // função para verificar os dados
     const {valid, errors} = validateLocationData(newPlace)
