@@ -366,11 +366,9 @@ exports.markNotificationsRead = (req, res) => {
 }
 
 // take users place
-exports.getUserPlace = (req, res) => {
+exports.getAllPlaces = (req, res) => {
     // db.collection(<nome da collection>) para acessá-la
     db.collection('places')
-        // ordenar
-        .orderBy('createdAt', 'desc')
         // .get() para pegar todos os dados da collection
         .get()
         .then( data => {
@@ -379,11 +377,12 @@ exports.getUserPlace = (req, res) => {
             data.forEach( doc => {
                 // para cada documento dentro dos dados colocar deentro do array criado
                 places.push({
-                    userOwner: doc.data().userOwner,
+                    handle: doc.data().handle,
                     category: doc.data().category,
                     lat: doc.data().lat,
                     lng: doc.data().lng,
-                    createdAt: doc.data().createdAt,
+                    description: doc.data().description,
+                    title: doc.data().title
                 });
             })
             // retornar em um json todos os dados da collection 'posts'

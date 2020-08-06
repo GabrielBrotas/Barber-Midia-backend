@@ -29,7 +29,7 @@ const {
   getAuthenticatedUser,
   getUserDetails,
   markNotificationsRead,
-  getUserPlace,
+  getAllPlaces,
   saveLocation
 } = require('./routers/users')
 
@@ -53,6 +53,7 @@ app.get('/post/:postId/unlike', FirebaseAuth, unlikePost)
 app.post('/post/:postId/comment', FirebaseAuth, commentOnPost)
 // pegar todos os comentarios
 app.get('/comments', getAllComments)
+
 // *User Router
 // pegar todos os usuarios que
 app.get('/users', getAllUsers)
@@ -73,7 +74,7 @@ app.get('/user/:handle', getUserDetails)
 // marcar notificações como lida
 app.post('/notifications', FirebaseAuth, markNotificationsRead)
 // pegar local
-app.get('/users/places', getUserPlace)
+app.get('/places', getAllPlaces)
 
 
 exports.api = functions.https.onRequest(app)
