@@ -92,6 +92,8 @@ exports.reduceUserDetails = (data) => {
 
     if(!isEmpty(data.location.trim())) userDetails.location = data.location
 
+    if(!isEmpty(data.category.trim())) userDetails.category = data.category
+
     // retornar os dados formatados
     return userDetails
 }
