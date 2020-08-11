@@ -97,3 +97,17 @@ exports.reduceUserDetails = (data) => {
     // retornar os dados formatados
     return userDetails
 }
+
+
+exports.reduceUserDetails = (data) => {
+    let placeDetails = {};
+
+    if(!isEmpty(data.handle.trim())) placeDetails.handle = data.handle
+    if(!isEmpty(data.category.trim())) placeDetails.category = data.category
+    if(!isEmpty(data.description.trim())) placeDetails.description = data.description
+    if(!isEmpty(data.title.trim())) placeDetails.title = data.title
+    if(!isEmpty(data.lat.trim())) placeDetails.lat = data.lat
+    if(!isEmpty(data.lng.trim())) placeDetails.lng = data.lng
+
+    return placeDetails
+}

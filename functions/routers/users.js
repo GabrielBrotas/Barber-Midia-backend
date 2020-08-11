@@ -165,15 +165,38 @@ exports.login = (req, res) => {
 }
 
 
-// Add user details
+// Add/edit user details
 exports.addUserDetails = (req, res) => {
     // vai pegar os dados formatados que o usuario passou para editar a descrição
     let userDetails = reduceUserDetails(req.body)
-
     // atualizar o dado do usuario com os dados passado
     db.doc(`/users/${req.user.handle}`).update(userDetails)
         .then( () => {
             return res.json({message: "Details added successfully"});
+        })
+        .catch( err => {
+            console.error(err)
+            return res.status(500).json({error: err.code})
+        })
+}
+
+// Add/update user place
+exports.addPlaceDetails = (req, res) => {
+    // vai pegar os dados formatados que o usuario passou para editar a descrição
+    let placeDetails = reducePlaceDetails(req.body)
+    // atualizar o dado do usuario com os dados passado
+
+    const dbPlaces = db.collection('places')
+    
+    dbPlaces
+        .where('handle', "==", req.user.handle)
+        .get()
+        .then( (doc) => {
+            if(!doc.exists){
+                dbPlaces.add(placeDetails)        
+                return res.status(200).json(placeDetails)
+            }
+            return doc.update(placeDetails)
         })
         .catch( err => {
             console.error(err)
