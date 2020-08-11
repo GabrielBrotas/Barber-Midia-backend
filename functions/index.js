@@ -30,7 +30,8 @@ const {
   getUserDetails,
   markNotificationsRead,
   getAllPlaces,
-  saveLocation
+  saveLocation,
+  addPlaceDetails
 } = require('./routers/users')
 
 
@@ -61,6 +62,8 @@ app.get('/users', getAllUsers)
 app.post('/signup', signup)
 // registrar locaiton
 app.post('/savelocation', saveLocation)
+// editar locaiton
+app.post('/editlocation', FirebaseAuth, addPlaceDetails)
 // logar
 app.post('/login', login)
 // atualizar imagem do perfil ou adicionar foto no post

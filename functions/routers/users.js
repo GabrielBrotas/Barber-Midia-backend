@@ -2,7 +2,7 @@ const firebase = require('firebase')
 
 const {admin, db} = require('../util/admin')
 const config = require('../util/config')
-const {validateSignupData, validateLoginData, reduceUserDetails, validateLocationData} = require('../util/validators')
+const {validateSignupData, validateLoginData, reduceUserDetails, validateLocationData, reducePlaceDetails} = require('../util/validators')
 
 firebase.initializeApp(config)
 
@@ -185,18 +185,19 @@ exports.addPlaceDetails = (req, res) => {
     // vai pegar os dados formatados que o usuario passou para editar a descrição
     let placeDetails = reducePlaceDetails(req.body)
     // atualizar o dado do usuario com os dados passado
-
+    placeDetails.handle = req.user.handle
     const dbPlaces = db.collection('places')
-    
     dbPlaces
         .where('handle', "==", req.user.handle)
+        .limit(1)
         .get()
         .then( (doc) => {
             if(!doc.exists){
                 dbPlaces.add(placeDetails)        
                 return res.status(200).json(placeDetails)
             }
-            return doc.update(placeDetails)
+            doc.update(placeDetails)
+            return res.status(200).json(placeDetails)
         })
         .catch( err => {
             console.error(err)
