@@ -63,7 +63,7 @@ app.post('/signup', signup)
 // registrar locaiton
 app.post('/savelocation', saveLocation)
 // editar locaiton
-app.post('/editlocation', FirebaseAuth, addPlaceDetails)
+app.post('/editlocation/:placeId', FirebaseAuth, addPlaceDetails)
 // logar
 app.post('/login', login)
 // atualizar imagem do perfil ou adicionar foto no post

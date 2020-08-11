@@ -90,8 +90,6 @@ exports.reduceUserDetails = (data) => {
         } else userDetails.instagram = data.instagram;
     }
 
-    if(!isEmpty(data.location.trim())) userDetails.location = data.location
-
     if(!isEmpty(data.category.trim())) userDetails.category = data.category
 
     // retornar os dados formatados
@@ -105,9 +103,11 @@ exports.reducePlaceDetails = (data) => {
     if(!isEmpty(data.category.trim())) placeDetails.category = data.category
     if(!isEmpty(data.description.trim())) placeDetails.description = data.description
     if(!isEmpty(data.title.trim())) placeDetails.title = data.title
-    // todo, checar se tem lat ou nao
-    if(!data.lat) placeDetails.lat = data.lat
-    if(!data.lng) placeDetails.lng = data.lng
+
+    if(data.lat) placeDetails.lat  = data.lat
+    if(data.lng) placeDetails.lng = data.lng
 
     return placeDetails
 }
+
+

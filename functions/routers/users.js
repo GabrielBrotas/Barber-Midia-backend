@@ -34,6 +34,32 @@ exports.getAllUsers = (req, res) => {
         .catch( err => console.error(err))
 }
 
+// Log user in
+exports.login = (req, res) => {
+    const {email, password} = req.body
+    const user = {email, password}
+
+    const {valid, errors} = validateLoginData(user)
+
+    if(!valid) return res.status(400).json(errors)
+
+    // autenticar o usuario com o email e a senha
+    firebase.auth().signInWithEmailAndPassword(email, password)
+        .then( data => {
+            // pegear o token
+            return data.user.getIdToken()
+        })
+        .then(token => {
+            // retornar o token
+            return res.json({token})
+        })
+        .catch(err => {
+            console.error(err);
+            // auth/wrong-password
+            return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
+        })
+}
+
 // Sign up new user
 exports.signup = async (req, res) => {
 
@@ -108,6 +134,7 @@ exports.saveLocation = async (req, res, next) => {
 
     // função para verificar os dados
     const {valid, errors} = validateLocationData(newPlace)
+
     // se nao tiver valido retornar os erros...
     if(!valid) return res.status(400).json(errors)
     
@@ -116,10 +143,11 @@ exports.saveLocation = async (req, res, next) => {
         const allPlaces = await db.collection('places').get()
 
         allPlaces.forEach( doc => {
-            if (doc.data().title === title) {
+            if (doc.data().title === title && doc.data().handle !== handle) {
                 throw new Error('Essa barbearia já esta cadastrada. tente novamente!')
             }
         })
+
         db.collection('places')
         .add(newPlace)
         .then( (doc) => {
@@ -138,32 +166,20 @@ exports.saveLocation = async (req, res, next) => {
 
 }
 
-// Log user in
-exports.login = (req, res) => {
-    const {email, password} = req.body
-    const user = {email, password}
+// Add/update user place
+exports.addPlaceDetails = async (req, res) => {
+    // vai pegar os dados formatados que o usuario passou para editar a descrição
+    let placeDetails = reducePlaceDetails(req.body)
+    // atualizar o dado do usuario com os dados passado
+    placeDetails.handle = req.user.handle
 
-    const {valid, errors} = validateLoginData(user)
-
-    if(!valid) return res.status(400).json(errors)
-
-    // autenticar o usuario com o email e a senha
-    firebase.auth().signInWithEmailAndPassword(email, password)
-        .then( data => {
-            // pegear o token
-            return data.user.getIdToken()
-        })
-        .then(token => {
-            // retornar o token
-            return res.json({token})
-        })
-        .catch(err => {
-            console.error(err);
-            // auth/wrong-password
-            return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
-        })
+    if(req.params.placeId) {
+        await db.doc(`/places/${req.params.placeId}`).update(placeDetails)
+        return res.status(200).json(placeDetails)
+    } else {
+        return res.status(500).json({error: "Something went wrong"})
+    }
 }
-
 
 // Add/edit user details
 exports.addUserDetails = (req, res) => {
@@ -173,31 +189,6 @@ exports.addUserDetails = (req, res) => {
     db.doc(`/users/${req.user.handle}`).update(userDetails)
         .then( () => {
             return res.json({message: "Details added successfully"});
-        })
-        .catch( err => {
-            console.error(err)
-            return res.status(500).json({error: err.code})
-        })
-}
-
-// Add/update user place
-exports.addPlaceDetails = (req, res) => {
-    // vai pegar os dados formatados que o usuario passou para editar a descrição
-    let placeDetails = reducePlaceDetails(req.body)
-    // atualizar o dado do usuario com os dados passado
-    placeDetails.handle = req.user.handle
-    const dbPlaces = db.collection('places')
-    dbPlaces
-        .where('handle', "==", req.user.handle)
-        .limit(1)
-        .get()
-        .then( (doc) => {
-            if(!doc.exists){
-                dbPlaces.add(placeDetails)        
-                return res.status(200).json(placeDetails)
-            }
-            doc.update(placeDetails)
-            return res.status(200).json(placeDetails)
         })
         .catch( err => {
             console.error(err)
