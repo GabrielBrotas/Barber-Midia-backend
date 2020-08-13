@@ -126,7 +126,7 @@ exports.signup = async (req, res) => {
     // feito isso vai criar uma autenticação para o usuario
 }
 
-// Save location
+// Add new location
 exports.saveLocation = async (req, res, next) => {
 
     const {category, description, handle, title, lat, lng} = req.body
@@ -154,6 +154,7 @@ exports.saveLocation = async (req, res, next) => {
             const newPlaceResponse = newPlace;
             // adicionar o Id do documento criado no objeto
             newPlaceResponse.placeId = doc.id;
+            doc.update(newPlaceResponse)
             res.json(newPlaceResponse)
         }).catch( err => {
             res.status(500).json({error: 'Algo deu errado ! ' + err})
@@ -397,8 +398,9 @@ exports.getAllPlaces = (req, res) => {
                     lat: doc.data().lat,
                     lng: doc.data().lng,
                     description: doc.data().description,
-                    title: doc.data().title
-                });
+                    title: doc.data().title,
+                    placeId: doc.data().placeId
+                })
             })
             // retornar em um json todos os dados da collection 'posts'
             return res.json(places);
