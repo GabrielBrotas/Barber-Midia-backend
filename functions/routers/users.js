@@ -168,7 +168,7 @@ exports.saveLocation = async (req, res, next) => {
 }
 
 // Add/update user place
-exports.addPlaceDetails = async (req, res) => {
+exports.editPlaceDetails = async (req, res) => {
     // vai pegar os dados formatados que o usuario passou para editar a descrição
     let placeDetails = reducePlaceDetails(req.body)
     // atualizar o dado do usuario com os dados passado
@@ -180,6 +180,35 @@ exports.addPlaceDetails = async (req, res) => {
     } else {
         return res.status(500).json({error: "Something went wrong"})
     }
+}
+
+// delete place
+exports.deletePlace = async (req, res) => {
+    const document = db.doc(`/places/${req.params.placeId}`);
+
+    document.get()
+        .then( doc => {
+            // se nao existir retornar erro 404...
+            if(!doc.exists){
+                return res.status(404).json({erro: "Local não encontrado"})
+            }
+            // se nao for o dono da Post retornar 403...
+            if(doc.data().handle !== req.user.handle) {
+                return res.status(403).json({error: "Voce nao tem permissão para fazer isso."})
+            } else {
+                // deletar o documento
+                return document.delete();
+            }
+            return document.delete();
+        })
+        .then( () => {
+            // retornar mensagem
+            res.json({message: "Local deletado com sucesso"})
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({error: err.code})
+        })
 }
 
 // Add/edit user details
