@@ -17,7 +17,8 @@ const {
   likePost,
   unlikePost,
   commentOnPost,
-  getAllComments
+  getAllComments,
+  deleteComment
 } = require('./routers/posts')
 
 const {
@@ -55,6 +56,8 @@ app.get('/post/:postId/unlike', FirebaseAuth, unlikePost)
 app.post('/post/:postId/comment', FirebaseAuth, commentOnPost)
 // pegar todos os comentarios
 app.get('/comments', getAllComments)
+// deletar comentario
+app.delete('/comment/:commentId', FirebaseAuth, deleteComment)
 
 // *User Router
 // pegar todos os usuarios que

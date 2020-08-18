@@ -42,6 +42,7 @@ exports.getAllComments = (req, res) => {
             data.forEach( doc => {
                 // para cada documento dentro dos dados colocar deentro do array criado
                 comments.push({
+                    commentId: doc.id,
                     postId: doc.data().postId,
                     bodyText: doc.data().bodyText,
                     userHandle: doc.data().userHandle,
@@ -296,6 +297,36 @@ exports.commentOnPost = (req, res) => {
         .catch( err => {
             console.log(err)
             res.status(500).json({error: "Something went wrong"})
+        })
+}
+
+// Delete Comment
+exports.deleteComment = (req, res) => {
+    // pegar o comentario passado pelo id
+    const document = db.doc(`/comments/${req.params.commentId}`);
+
+    document.get()
+        .then( doc => {
+            // se nao existir retornar erro 404...
+            if(!doc.exists){
+                return res.status(404).json({erro: "Comentario não encontrado"})
+            }
+            // se nao for o dono do comeentario retornar 403...
+            if(doc.data().userHandle !== req.user.handle) {
+                return res.status(403).json({error: "Voce nao tem permissão para fazer isso."})
+            } else {
+                // deletar o documento
+                return document.delete();
+            }
+            return document.delete();
+        })
+        .then( () => {
+            // retornar mensagem
+            res.json({message: "Commentario deletado com sucesso"})
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({error: err.code})
         })
 }
 
