@@ -30,12 +30,15 @@ const {
   getAuthenticatedUser,
   getUserDetails,
   markNotificationsRead,
+
+} = require('./routers/users')
+
+const { 
   getAllPlaces,
   saveLocation,
   editPlaceDetails,
   deletePlace
-} = require('./routers/users')
-
+} = require('./routers/locations')
 
 // *Posts router
 // acessar o database e pegar todos os posts
@@ -64,12 +67,6 @@ app.delete('/comment/:commentId', FirebaseAuth, deleteComment)
 app.get('/users', getAllUsers)
 // registrar
 app.post('/signup', signup)
-// registrar locaiton
-app.post('/savelocation', saveLocation)
-// editar locaiton
-app.post('/editlocation/:placeId', FirebaseAuth, editPlaceDetails)
-// delete place
-app.post('/deletelocation/:placeId', FirebaseAuth, deletePlace)
 // logar
 app.post('/login', login)
 // atualizar imagem do perfil ou adicionar foto no post
@@ -82,8 +79,16 @@ app.get('/user', FirebaseAuth, getAuthenticatedUser)
 app.get('/user/:handle', getUserDetails)
 // marcar notificações como lida
 app.post('/notifications', FirebaseAuth, markNotificationsRead)
+
+// * Locations Router
 // pegar local
 app.get('/places', getAllPlaces)
+// registrar locaiton
+app.post('/savelocation', saveLocation)
+// editar locaiton
+app.post('/editlocation/:placeId', FirebaseAuth, editPlaceDetails)
+// delete place
+app.post('/deletelocation/:placeId', FirebaseAuth, deletePlace)
 
 
 exports.api = functions.https.onRequest(app)

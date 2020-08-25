@@ -18,7 +18,6 @@ const isEmail = (email) => {
 
 
 exports.validateSignupData = (data) => {
-    console.log(data)
     // check erros...
     let errors = {}
 

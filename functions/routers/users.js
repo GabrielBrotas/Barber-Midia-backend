@@ -1,4 +1,6 @@
 const firebase = require('firebase')
+const bcrypt = require('bcryptjs')
+const randomstring = require('randomstring')
 
 const {admin, db} = require('../util/admin')
 const config = require('../util/config')
@@ -26,6 +28,7 @@ exports.getAllUsers = (req, res) => {
                     email: doc.data().email,
                     imageUrl: doc.data().imageUrl,
                     createdAt: doc.data().createdAt,
+                    bio: doc.data().bio
                 });
             })
             // retornar em um json todos os dados da collection 'posts'
@@ -62,7 +65,6 @@ exports.login = (req, res) => {
 
 // Sign up new user
 exports.signup = async (req, res) => {
-
     const {email, password, confirmPassword, handle, category} = req.body
     const newUser = {email, password, confirmPassword, handle, category}
 
@@ -83,19 +85,11 @@ exports.signup = async (req, res) => {
         return res.status(400).json({ handle: 'Este usuário já existe. tente novamente!'})
     } 
     
+    const salt = bcrypt.genSaltSync(10)
+    const hash = bcrypt.hashSync(password, salt)
+    const secretToken = randomstring.generate()
+
     try{
-        // esperar criar um usuario com o email e senha passado
-        const data = await firebase
-            // autenticar
-            .auth()
-            // criar um novo usuario que possa se autenticar
-            .createUserWithEmailAndPassword(newUser.email, newUser.password)
-
-        // pegar o uid do usuario criado
-        const userId = data.user.uid
-
-        // pegar o token gerado para esse usuario
-        const userToken = data.user.getIdToken()
         
         // criar objeto com as credenciais
         const userCredentials = {
@@ -106,13 +100,18 @@ exports.signup = async (req, res) => {
         imageUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${noImg}?alt=media`,
         userId,
         category,
+        secretToken,
+        confirmed: false,
+        password: hash
         }
+
+        const mandou = require('./Control/configs/mailer')(email, secretToken)
 
         // esperar criar um novo usuario, na collection user o nome do dado vai ser o 'handle' do user, set() vai criar um novo usuario, ao inves de get que apenas pega, com os dados do objeto criado
         await db.doc(`/users/${newUser.handle}`).set(userCredentials)
 
         // retornar o token
-        return res.status(201).json({ userToken} )
+        return res.redirect('/verify/' + email)
 
     } catch(err){
         console.error(err)
@@ -126,90 +125,40 @@ exports.signup = async (req, res) => {
     // feito isso vai criar uma autenticação para o usuario
 }
 
-// Add new location
-exports.saveLocation = async (req, res, next) => {
+exports.verifyAccount = async (req, res) => {
 
-    const {category, description, handle, title, lat, lng} = req.body
-    const newPlace = {category, description, handle, title, lat, lng}
+    var {handle, email, hash, token} = req.body
 
-    // função para verificar os dados
-    const {valid, errors} = validateLocationData(newPlace)
+    db.doc(`/users/${handle}`)
+        .get()
+        .then( user => {
+            if(user.exists) {
+                if (user.secretToken === token) {
+                    // esperar criar um usuario com o email e senha passado
+                    const data = await firebase
+                    // autenticar
+                    .auth()
+                    // criar um novo usuario que possa se autenticar
+                    .createUserWithEmailAndPassword(newUser.email, hash)
 
-    // se nao tiver valido retornar os erros...
-    if(!valid) return res.status(400).json(errors)
-    
-    try {
-        // doc passando o caminho da collection e pegar o dado dessa collection com o nome do user handle
-        const allPlaces = await db.collection('places').get()
+                    // pegar o uid do usuario criado
+                    const userId = data.user.uid
 
-        allPlaces.forEach( doc => {
-            if (doc.data().title === title && doc.data().handle !== handle) {
-                throw new Error('Essa barbearia já esta cadastrada. tente novamente!')
-            }
-        })
+                    // pegar o token gerado para esse usuario
+                    const userToken = data.user.getIdToken()
 
-        db.collection('places')
-        .add(newPlace)
-        .then( (doc) => {
-            const newPlaceResponse = newPlace;
-            // adicionar o Id do documento criado no objeto
-            newPlaceResponse.placeId = doc.id;
-            doc.update(newPlaceResponse)
-            res.json(newPlaceResponse)
-        }).catch( err => {
-            res.status(500).json({error: 'Algo deu errado ! ' + err})
-            console.error(err)
-        })
-
-    } catch(err) {
-        next(err)
-    }
-
-}
-
-// Add/update user place
-exports.editPlaceDetails = async (req, res) => {
-    // vai pegar os dados formatados que o usuario passou para editar a descrição
-    let placeDetails = reducePlaceDetails(req.body)
-    // atualizar o dado do usuario com os dados passado
-    placeDetails.handle = req.user.handle
-
-    if(req.params.placeId) {
-        await db.doc(`/places/${req.params.placeId}`).update(placeDetails)
-        return res.status(200).json(placeDetails)
-    } else {
-        return res.status(500).json({error: "Something went wrong"})
-    }
-}
-
-// delete place
-exports.deletePlace = async (req, res) => {
-    const document = db.doc(`/places/${req.params.placeId}`);
-
-    document.get()
-        .then( doc => {
-            // se nao existir retornar erro 404...
-            if(!doc.exists){
-                return res.status(404).json({erro: "Local não encontrado"})
-            }
-            // se nao for o dono da Post retornar 403...
-            if(doc.data().handle !== req.user.handle) {
-                return res.status(403).json({error: "Voce nao tem permissão para fazer isso."})
+                    db.doc(`/users/${handle}`).update({confirm: true, secretToken: ""})
+                    
+                    return res.status(201).json({ userToken} )
+                } else {
+                    return res.status(400).json({error: 'token nao encontrado'})
+                }
             } else {
-                // deletar o documento
-                return document.delete();
+                return res.status(400).json({error: 'Esta conta não existe'})
             }
-            return document.delete();
-        })
-        .then( () => {
-            // retornar mensagem
-            res.json({message: "Local deletado com sucesso"})
-        })
-        .catch(err => {
-            console.error(err);
-            return res.status(500).json({error: err.code})
         })
 }
+
 
 // Add/edit user details
 exports.addUserDetails = (req, res) => {
@@ -410,29 +359,3 @@ exports.markNotificationsRead = (req, res) => {
         })
 }
 
-// take users place
-exports.getAllPlaces = (req, res) => {
-    // db.collection(<nome da collection>) para acessá-la
-    db.collection('places')
-        // .get() para pegar todos os dados da collection
-        .get()
-        .then( data => {
-            // array para armazenar os dados
-            let places = []
-            data.forEach( doc => {
-                // para cada documento dentro dos dados colocar deentro do array criado
-                places.push({
-                    handle: doc.data().handle,
-                    category: doc.data().category,
-                    lat: doc.data().lat,
-                    lng: doc.data().lng,
-                    description: doc.data().description,
-                    title: doc.data().title,
-                    placeId: doc.data().placeId
-                })
-            })
-            // retornar em um json todos os dados da collection 'posts'
-            return res.json(places);
-        })
-        .catch( err => console.error(err))
-}
