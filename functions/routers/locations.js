@@ -1,11 +1,9 @@
 const firebase = require('firebase')
 
-
 const {db} = require('../util/admin')
 const config = require('../util/config')
 const {reduceUserDetails, validateLocationData, reducePlaceDetails} = require('../util/validators')
 
-firebase.initializeApp(config)
 
 // Add new location
 exports.saveLocation = async (req, res, next) => {

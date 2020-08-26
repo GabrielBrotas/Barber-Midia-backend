@@ -4,7 +4,7 @@ const randomstring = require('randomstring')
 
 const {admin, db} = require('../util/admin')
 const config = require('../util/config')
-const {validateSignupData, validateLoginData, reduceUserDetails, validateLocationData, reducePlaceDetails} = require('../util/validators')
+const {validateSignupData, validateLoginData, reduceUserDetails} = require('../util/validators')
 
 firebase.initializeApp(config)
 
@@ -98,14 +98,13 @@ exports.signup = async (req, res) => {
         createdAt: new Date().toISOString(),
         // url onde o firebase vai guardar as imagens
         imageUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${noImg}?alt=media`,
-        userId,
         category,
         secretToken,
         confirmed: false,
         password: hash
         }
 
-        const mandou = require('./Control/configs/mailer')(email, secretToken)
+        const mandou = await require('../util/mailer')(email, secretToken)
 
         // esperar criar um novo usuario, na collection user o nome do dado vai ser o 'handle' do user, set() vai criar um novo usuario, ao inves de get que apenas pega, com os dados do objeto criado
         await db.doc(`/users/${newUser.handle}`).set(userCredentials)
@@ -125,21 +124,21 @@ exports.signup = async (req, res) => {
     // feito isso vai criar uma autenticação para o usuario
 }
 
-exports.verifyAccount = async (req, res) => {
+exports.verifyAccount = (req, res) => {
 
     var {handle, email, hash, token} = req.body
 
     db.doc(`/users/${handle}`)
         .get()
-        .then( user => {
+        .then( async user => {
             if(user.exists) {
                 if (user.secretToken === token) {
                     // esperar criar um usuario com o email e senha passado
                     const data = await firebase
-                    // autenticar
-                    .auth()
-                    // criar um novo usuario que possa se autenticar
-                    .createUserWithEmailAndPassword(newUser.email, hash)
+                        // autenticar
+                        .auth()
+                        // criar um novo usuario que possa se autenticar
+                        .createUserWithEmailAndPassword(newUser.email, hash)
 
                     // pegar o uid do usuario criado
                     const userId = data.user.uid
@@ -147,8 +146,8 @@ exports.verifyAccount = async (req, res) => {
                     // pegar o token gerado para esse usuario
                     const userToken = data.user.getIdToken()
 
-                    db.doc(`/users/${handle}`).update({confirm: true, secretToken: ""})
-                    
+                    db.doc(`/users/${handle}`).update({confirm: true, secretToken: "", userId})
+
                     return res.status(201).json({ userToken} )
                 } else {
                     return res.status(400).json({error: 'token nao encontrado'})

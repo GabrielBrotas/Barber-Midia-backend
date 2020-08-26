@@ -24,13 +24,13 @@ const {
 const {
   getAllUsers,
   signup,
+  verifyAccount,
   login,
   uploadImage,
   addUserDetails,
   getAuthenticatedUser,
   getUserDetails,
   markNotificationsRead,
-
 } = require('./routers/users')
 
 const { 
@@ -67,6 +67,8 @@ app.delete('/comment/:commentId', FirebaseAuth, deleteComment)
 app.get('/users', getAllUsers)
 // registrar
 app.post('/signup', signup)
+// registrar
+app.post('/verify', verifyAccount)
 // logar
 app.post('/login', login)
 // atualizar imagem do perfil ou adicionar foto no post
