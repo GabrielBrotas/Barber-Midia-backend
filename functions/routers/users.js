@@ -104,13 +104,11 @@ exports.signup = async (req, res) => {
         password: hash
         }
 
-        const mandou = await require('../util/mailer')(email, secretToken)
-
         // esperar criar um novo usuario, na collection user o nome do dado vai ser o 'handle' do user, set() vai criar um novo usuario, ao inves de get que apenas pega, com os dados do objeto criado
         await db.doc(`/users/${newUser.handle}`).set(userCredentials)
 
         // retornar o token
-        return res.redirect('/verify/' + email)
+        return res.status(200).json({message: "Pronto, agora confirme seu cadastro no endereço de email!"})
 
     } catch(err){
         console.error(err)
@@ -126,19 +124,20 @@ exports.signup = async (req, res) => {
 
 exports.verifyAccount = (req, res) => {
 
-    var {handle, email, hash, token} = req.body
+    var {handle, email, hash, secretToken} = req.body
 
     db.doc(`/users/${handle}`)
         .get()
         .then( async user => {
             if(user.exists) {
-                if (user.secretToken === token) {
+                if (user.data().secretToken === secretToken) {
                     // esperar criar um usuario com o email e senha passado
-                    const data = await firebase
+                    try{
+                        const data = await firebase
                         // autenticar
                         .auth()
                         // criar um novo usuario que possa se autenticar
-                        .createUserWithEmailAndPassword(newUser.email, hash)
+                        .createUserWithEmailAndPassword(email, hash)
 
                     // pegar o uid do usuario criado
                     const userId = data.user.uid
@@ -148,7 +147,11 @@ exports.verifyAccount = (req, res) => {
 
                     db.doc(`/users/${handle}`).update({confirm: true, secretToken: "", userId})
 
-                    return res.status(201).json({ userToken} )
+                    return res.redirect('http://localhost:3000/verify')
+                    } catch (err) {
+                        return res.status(201).json({err} )
+                    }
+                    
                 } else {
                     return res.status(400).json({error: 'token nao encontrado'})
                 }

@@ -3,8 +3,10 @@ const app = require('express')()
 const functions = require('firebase-functions')
 const {db} = require('./util/admin')
 const cors = require('cors')
+const nodemailer = require('nodemailer')
 require('dotenv/config')
 const FirebaseAuth = require('./util/fbAuth')
+
 // * Configs
 app.use(cors())
 
@@ -67,10 +69,10 @@ app.delete('/comment/:commentId', FirebaseAuth, deleteComment)
 app.get('/users', getAllUsers)
 // registrar
 app.post('/signup', signup)
-// registrar
-app.post('/verify', verifyAccount)
 // logar
 app.post('/login', login)
+// registrar
+app.post('/verify', verifyAccount)
 // atualizar imagem do perfil ou adicionar foto no post
 app.post('/user/image/:postPicture?', FirebaseAuth, uploadImage)
 // editar descrição do user
@@ -119,6 +121,49 @@ exports.createNotificationOnLike = functions.firestore.document('likes/{id}').on
           console.error(err);
       })
 })
+
+exports.sendEmailToVerifyAccountNewUser = functions
+    .firestore.document('users/{handle}')
+    .onCreate( (snapshot, context) => {
+        const data = snapshot.data()
+
+        let authData = nodemailer.createTransport({
+            host: 'smtp.umbler.com',
+            port: 587,
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.PASSWORD
+            }
+        });
+
+        authData.sendMail({
+            from: process.env.EMAIL,
+            to: data.email,
+            subject: 'Confirmação de conta',
+            html: `
+                <h2>Muito muito obrigado por se cadastrar no nosso app</h2>
+                <h2>Agora o ultimo passo é confirmar seu email clicando no link abaixo</h2>
+                <br />
+                <form action="${process.env.APP_FRONTEND_URL}/verify" method="post">
+                    <input name="hash" type='hidden' value='${data.hash}' />
+                    <input name="handle" type='hidden' value='${data.handle}' />
+                    <input name="secretToken" type='hidden' value='${data.secretToken}' />
+                    <input name="email" type='hidden' value='${data.email}' />
+                    <input type='submit' value="Confirmar" />
+                </form>
+            `
+        })
+            .then( info => {
+                console.log("mandou o email")
+                return res.send(info)
+            })
+            .catch( err => {
+                console.log("erro = " + err)
+                return res.send(err)
+            })
+
+    })
+
 
 // caso o usuario removar o like vai tirar a notificação
 exports.deleteNotificationOnUnlike = functions
