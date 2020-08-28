@@ -125,44 +125,38 @@ exports.createNotificationOnLike = functions.firestore.document('likes/{id}').on
 exports.sendEmailToVerifyAccountNewUser = functions
     .firestore.document('users/{handle}')
     .onCreate( (snapshot, context) => {
-        const data = snapshot.data()
 
-        let authData = nodemailer.createTransport({
-            host: 'smtp.umbler.com',
-            port: 587,
-            auth: {
-                user: process.env.EMAIL,
-                pass: process.env.PASSWORD
-            }
-        });
+    const data = snapshot.data()
 
-        authData.sendMail({
-            from: process.env.EMAIL,
-            to: data.email,
-            subject: 'Confirmação de conta',
-            html: `
-                <h2>Muito muito obrigado por se cadastrar no nosso app</h2>
-                <h2>Agora o ultimo passo é confirmar seu email clicando no link abaixo</h2>
-                <br />
-                <form action="${process.env.APP_FRONTEND_URL}/verify" method="post">
-                    <input name="hash" type='hidden' value='${data.hash}' />
-                    <input name="handle" type='hidden' value='${data.handle}' />
-                    <input name="secretToken" type='hidden' value='${data.secretToken}' />
-                    <input name="email" type='hidden' value='${data.email}' />
-                    <input type='submit' value="Confirmar" />
-                </form>
-            `
-        })
-            .then( info => {
-                console.log("mandou o email")
-                return res.send(info)
-            })
-            .catch( err => {
-                console.log("erro = " + err)
-                return res.send(err)
-            })
+    let authData = nodemailer.createTransport({
+        host: 'smtp.umbler.com',
+        port: 587,
+        auth: {
+            user: process.env.EMAIL,
+            pass: process.env.PASSWORD
+        }
+    });
 
+    authData.sendMail({
+        from: process.env.EMAIL,
+        to: data.email,
+        subject: 'Confirmação de conta',
+        html: `
+            <h2>Muito muito obrigado por se cadastrar no nosso app</h2>
+            <h2>Agora o ultimo passo é confirmar seu email clicando no link abaixo</h2>
+            <br />
+            <form action="${process.env.APP_FRONTEND_URL}/verify" method="post">
+                <input name='handle' type='hidden' value='${data.handle}' />
+                <input type='submit' value="Confirmar" />
+            </form>
+        `
+    }).then( info => {
+            return res.send(info)
+    }).catch( err => {
+        return res.send(err)
     })
+
+})
 
 
 // caso o usuario removar o like vai tirar a notificação

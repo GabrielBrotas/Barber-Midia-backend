@@ -124,20 +124,19 @@ exports.signup = async (req, res) => {
 
 exports.verifyAccount = (req, res) => {
 
-    var {handle, email, hash, secretToken} = req.body
+    var {handle} = req.body
 
     db.doc(`/users/${handle}`)
         .get()
         .then( async user => {
             if(user.exists) {
-                if (user.data().secretToken === secretToken) {
                     // esperar criar um usuario com o email e senha passado
                     try{
                         const data = await firebase
                         // autenticar
                         .auth()
                         // criar um novo usuario que possa se autenticar
-                        .createUserWithEmailAndPassword(email, hash)
+                        .createUserWithEmailAndPassword(user.data().email, user.data().password)
 
                     // pegar o uid do usuario criado
                     const userId = data.user.uid
@@ -147,14 +146,10 @@ exports.verifyAccount = (req, res) => {
 
                     db.doc(`/users/${handle}`).update({confirm: true, secretToken: "", userId})
 
-                    return res.redirect('http://localhost:3000/verify')
+                    return res.redirect(`http://localhost:3000/verify/${handle}`)
                     } catch (err) {
                         return res.status(201).json({err} )
                     }
-                    
-                } else {
-                    return res.status(400).json({error: 'token nao encontrado'})
-                }
             } else {
                 return res.status(400).json({error: 'Esta conta não existe'})
             }
