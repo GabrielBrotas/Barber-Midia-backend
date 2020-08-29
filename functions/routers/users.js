@@ -47,50 +47,50 @@ exports.login = async (req, res) => {
 
     if(!valid) return res.status(400).json(errors)
     else {
-        try{ 
-            let user;
-            const dbUsers = await db.collection('users').get()
-            dbUsers.forEach( doc => {
-                if(doc.data().email === email) {
-                    user = doc.data();
-                }
-            })
-            if(user) {
-                bcrypt.compare(password, user.password, (err, match) => {
-                    if(match){
-                        // todo pegar no db para verificar se o usuario esta confirmado
-                        var isChecked = user.confirmed
-                        
-                        if(isChecked){
-                            firebase.auth().signInWithEmailAndPassword(email, user.password)
-                            .then( data => {
-                                // pegar o token
-                                return data.user.getIdToken()
-                            })
-                            .then(token => {
-                                // retornar o token
-                                return res.json({token})
-                            })
-                            .catch(err => {
-                                console.error(err);
-                                // auth/wrong-password
-                                return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
-                            })
-                        } else {
-                            return res.status(403).json({general: "Pendente confirmar conta."})
-                        }
-                        
-                    } else {
-                        return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
-                    }
+    try{ 
+        let user;
+        const dbUsers = await db.collection('users').get()
+        dbUsers.forEach( doc => {
+            if(doc.data().email === email) {
+                user = doc.data();
+            }
+        })
+        if(user) {
+        bcrypt.compare(password, user.password, (err, match) => {
+            if(match){
+                
+            var isChecked = user.confirmed
+            
+            if(isChecked){
+                firebase.auth().signInWithEmailAndPassword(email, user.password)
+                .then( data => {
+                    // pegar o token
+                    return data.user.getIdToken()
                 })
+                .then(token => {
+                    // retornar o token
+                    return res.json({token})
+                })
+                .catch(err => {
+                    console.error(err);
+                    // auth/wrong-password
+                    return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
+                })
+            } else {
+                return res.status(403).json({general: "Pendente confirmar conta."})
+            }
+                
             } else {
                 return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
             }
-    
-        } catch (err) {
-            console.log(err)
+        })
+        } else {
+            return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
         }
+
+    } catch (err) {
+        console.log(err)
+    }
     }
     
 }
