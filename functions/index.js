@@ -72,7 +72,7 @@ app.post('/signup', signup)
 // logar
 app.post('/login', login)
 // registrar
-app.post('/verify', verifyAccount)
+app.post('/verify/:handleAndToken', verifyAccount)
 // atualizar imagem do perfil ou adicionar foto no post
 app.post('/user/image/:postPicture?', FirebaseAuth, uploadImage)
 // editar descrição do user
@@ -145,7 +145,7 @@ exports.sendEmailToVerifyAccountNewUser = functions
             <h2>Muito muito obrigado por se cadastrar no nosso app</h2>
             <h2>Agora o ultimo passo é confirmar seu email clicando no link abaixo</h2>
             <br />
-            <form action="${process.env.APP_FRONTEND_URL}/verify" method="post">
+            <form action="${process.env.APP_FRONTEND_URL}/verify/${data.handle}&token=${data.secretToken}" method="post">
                 <input name='handle' type='hidden' value='${data.handle}' />
                 <input type='submit' value="Confirmar" />
             </form>

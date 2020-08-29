@@ -5,6 +5,7 @@ const randomstring = require('randomstring')
 const {admin, db} = require('../util/admin')
 const config = require('../util/config')
 const {validateSignupData, validateLoginData, reduceUserDetails} = require('../util/validators')
+const {getTokenFromParams} = require('../util/helpers')
 
 firebase.initializeApp(config)
 
@@ -38,29 +39,49 @@ exports.getAllUsers = (req, res) => {
 }
 
 // Log user in
-exports.login = (req, res) => {
+exports.login = async (req, res) => {
     const {email, password} = req.body
-    const user = {email, password}
+    const userData = {email, password}
 
-    const {valid, errors} = validateLoginData(user)
+    const {valid, errors} = validateLoginData(userData)
 
     if(!valid) return res.status(400).json(errors)
 
-    // autenticar o usuario com o email e a senha
-    firebase.auth().signInWithEmailAndPassword(email, password)
-        .then( data => {
-            // pegear o token
-            return data.user.getIdToken()
+    try{ 
+        const dbUsers = await db.collection('users').get()
+
+        dbUsers.forEach( doc => {
+            if(doc.data().email === email) {
+                bcrypt.compare(password, doc.data().password, (err, match) => {
+                    if(match){
+                        // todo pegar no db para verificar se o usuario esta confirmado
+                        // var isChecked = checkConfirmEmail(user)
+ 
+                        firebase.auth().signInWithEmailAndPassword(email, doc.data().password)
+                        .then( data => {
+                            // pegar o token
+                            return data.user.getIdToken()
+                        })
+                        .then(token => {
+                            // retornar o token
+                            return res.json({token})
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            // auth/wrong-password
+                            return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
+                        })
+                    }
+                })
+            }
         })
-        .then(token => {
-            // retornar o token
-            return res.json({token})
-        })
-        .catch(err => {
-            console.error(err);
-            // auth/wrong-password
-            return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
-        })
+
+        return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
+
+    } catch (err) {
+        console.log(err)
+    }
+    
 }
 
 // Sign up new user
@@ -68,7 +89,6 @@ exports.signup = async (req, res) => {
     const {email, password, confirmPassword, handle, category} = req.body
     const newUser = {email, password, confirmPassword, handle, category}
 
-    // função para verificar os dados
     const {valid, errors} = validateSignupData(newUser)
     // se nao tiver valido retornar os erros...
     if(!valid) return res.status(400).json(errors)
@@ -79,52 +99,68 @@ exports.signup = async (req, res) => {
     // doc passando o caminho da collection e pegar o dado dessa collection com o nome do user handle
     const checkIfUserExist = await db.doc(`/users/${newUser.handle}`).get()
 
-    // se existir um usuario com o handle(nick/name)...
     if(checkIfUserExist.exists){
-        // nao vai cadastrar
         return res.status(400).json({ handle: 'Este usuário já existe. tente novamente!'})
     } 
+
+    let checkIfEmailExist = false
+    db.collection('/users').get()
+        .then( data => {
+            data.forEach( doc => {
+                if (doc.data().email === email) {
+                    checkIfEmailExist = true
+                }
+            })
+        })
+        .then( async () => {
+        try{
+
+            const salt = bcrypt.genSaltSync(10)
+            const hash = bcrypt.hashSync(password, salt)
+            const secretToken = randomstring.generate(30)
+            
+            // criar objeto com as credenciais
+            const userCredentials = {
+            handle, 
+            email,
+            createdAt: new Date().toISOString(),
+            // url onde o firebase vai guardar as imagens
+            imageUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${noImg}?alt=media`,
+            category,
+            secretToken,
+            confirmed: false,
+            password: hash
+            }
+            
+            if(!checkIfEmailExist) {
+                // esperar criar um novo usuario, na collection user o nome do dado vai ser o 'handle' do user, set() vai criar um novo usuario, ao inves de get que apenas pega, com os dados do objeto criado
+                await db.doc(`/users/${newUser.handle}`).set(userCredentials)
+                return res.status(200).json({message: "Pronto, agora confirme seu cadastro no endereço de email!"})
+            } else {
+                return res.status(400).json({ email: 'Este email já existe. tente novamente!'})
+            }
+            
+        } catch(err) {
+
+            if (err.code === 'auth/email-already-in-use'){
+                return res.status(400).json({ email: 'Este email já existe. tente novamente.'})
+            } else {
+                return res.status(500).json({general: "Something went wrong"})
+            }
+            
+        }
+        })
+        .catch( err => console.error(err))
     
-    const salt = bcrypt.genSaltSync(10)
-    const hash = bcrypt.hashSync(password, salt)
-    const secretToken = randomstring.generate()
-
-    try{
-        
-        // criar objeto com as credenciais
-        const userCredentials = {
-        handle, 
-        email,
-        createdAt: new Date().toISOString(),
-        // url onde o firebase vai guardar as imagens
-        imageUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${noImg}?alt=media`,
-        category,
-        secretToken,
-        confirmed: false,
-        password: hash
-        }
-
-        // esperar criar um novo usuario, na collection user o nome do dado vai ser o 'handle' do user, set() vai criar um novo usuario, ao inves de get que apenas pega, com os dados do objeto criado
-        await db.doc(`/users/${newUser.handle}`).set(userCredentials)
-
-        // retornar o token
-        return res.status(200).json({message: "Pronto, agora confirme seu cadastro no endereço de email!"})
-
-    } catch(err){
-        console.error(err)
-        if (err.code === 'auth/email-already-in-use'){
-            return res.status(400).json({ email: 'Este email já existe. tente novamente.'})
-        } else {
-            return res.status(500).json({general: "Something went wrong"})
-        }
-        
-    }
     // feito isso vai criar uma autenticação para o usuario
 }
 
 exports.verifyAccount = (req, res) => {
 
     var {handle} = req.body
+    var urlParams = req.params.handleAndToken
+
+    var token = getTokenFromParams(urlParams)
 
     db.doc(`/users/${handle}`)
         .get()
@@ -144,9 +180,9 @@ exports.verifyAccount = (req, res) => {
                     // pegar o token gerado para esse usuario
                     const userToken = data.user.getIdToken()
 
-                    db.doc(`/users/${handle}`).update({confirm: true, secretToken: "", userId})
+                    db.doc(`/users/${handle}`).update({confirmed: true, secretToken: "", userId})
 
-                    return res.redirect(`http://localhost:3000/verify/${handle}`)
+                    return res.redirect(`http://localhost:3000/verify/${handle}&token=${token}`)
                     } catch (err) {
                         return res.status(201).json({err} )
                     }
