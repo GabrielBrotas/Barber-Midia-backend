@@ -46,40 +46,51 @@ exports.login = async (req, res) => {
     const {valid, errors} = validateLoginData(userData)
 
     if(!valid) return res.status(400).json(errors)
-
-    try{ 
-        const dbUsers = await db.collection('users').get()
-
-        dbUsers.forEach( doc => {
-            if(doc.data().email === email) {
-                bcrypt.compare(password, doc.data().password, (err, match) => {
+    else {
+        try{ 
+            let user;
+            const dbUsers = await db.collection('users').get()
+            dbUsers.forEach( doc => {
+                if(doc.data().email === email) {
+                    user = doc.data();
+                }
+            })
+            if(user) {
+                bcrypt.compare(password, user.password, (err, match) => {
                     if(match){
                         // todo pegar no db para verificar se o usuario esta confirmado
-                        // var isChecked = checkConfirmEmail(user)
- 
-                        firebase.auth().signInWithEmailAndPassword(email, doc.data().password)
-                        .then( data => {
-                            // pegar o token
-                            return data.user.getIdToken()
-                        })
-                        .then(token => {
-                            // retornar o token
-                            return res.json({token})
-                        })
-                        .catch(err => {
-                            console.error(err);
-                            // auth/wrong-password
-                            return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
-                        })
+                        var isChecked = user.confirmed
+                        
+                        if(isChecked){
+                            firebase.auth().signInWithEmailAndPassword(email, user.password)
+                            .then( data => {
+                                // pegar o token
+                                return data.user.getIdToken()
+                            })
+                            .then(token => {
+                                // retornar o token
+                                return res.json({token})
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                // auth/wrong-password
+                                return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
+                            })
+                        } else {
+                            return res.status(403).json({general: "Pendente confirmar conta."})
+                        }
+                        
+                    } else {
+                        return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
                     }
                 })
+            } else {
+                return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
             }
-        })
-
-        return res.status(403).json({general: "Dados inválidos. Por favor tente novamente."})
-
-    } catch (err) {
-        console.log(err)
+    
+        } catch (err) {
+            console.log(err)
+        }
     }
     
 }
