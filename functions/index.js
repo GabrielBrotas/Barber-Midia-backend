@@ -32,14 +32,15 @@ const {
   addUserDetails,
   getAuthenticatedUser,
   getUserDetails,
-  markNotificationsRead,
+  markNotificationsRead
 } = require('./routers/users')
 
 const { 
   getAllPlaces,
   saveLocation,
   editPlaceDetails,
-  deletePlace
+  deletePlace,
+  addPlaceExtraDetails
 } = require('./routers/locations')
 
 // *Posts router
@@ -89,6 +90,8 @@ app.post('/notifications', FirebaseAuth, markNotificationsRead)
 app.get('/places', getAllPlaces)
 // registrar locaiton
 app.post('/savelocation', saveLocation)
+// adicionar detalhes extras
+app.post('/place', FirebaseAuth, addPlaceExtraDetails)
 // editar locaiton
 app.post('/editlocation/:placeId', FirebaseAuth, editPlaceDetails)
 // delete place

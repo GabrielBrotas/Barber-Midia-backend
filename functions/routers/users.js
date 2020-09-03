@@ -97,17 +97,15 @@ exports.login = async (req, res) => {
 
 // Sign up new user
 exports.signup = async (req, res) => {
-    const {email, password, confirmPassword, handle, category} = req.body
-    const newUser = {email, password, confirmPassword, handle, category}
+    const {email, password, confirmPassword, handle, type, category} = req.body
+    const newUser = {email, password, confirmPassword, handle, type, category}
 
     const {valid, errors} = validateSignupData(newUser)
-    // se nao tiver valido retornar os erros...
+
     if(!valid) return res.status(400).json(errors)
 
-    // imagem default para todos os usuarios(essa imagem já foi dada upload no db)
     const noImg = "no-img.png"
     
-    // doc passando o caminho da collection e pegar o dado dessa collection com o nome do user handle
     const checkIfUserExist = await db.doc(`/users/${newUser.handle}`).get()
 
     if(checkIfUserExist.exists){
@@ -137,6 +135,7 @@ exports.signup = async (req, res) => {
             createdAt: new Date().toISOString(),
             // url onde o firebase vai guardar as imagens
             imageUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${noImg}?alt=media`,
+            type,
             category,
             secretToken,
             confirmed: false,
@@ -152,13 +151,11 @@ exports.signup = async (req, res) => {
             }
             
         } catch(err) {
-
             if (err.code === 'auth/email-already-in-use'){
                 return res.status(400).json({ email: 'Este email já existe. tente novamente.'})
             } else {
                 return res.status(500).json({general: "Something went wrong"})
             }
-            
         }
         })
         .catch( err => console.error(err))

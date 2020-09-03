@@ -28,11 +28,14 @@ exports.validateSignupData = (data) => {
 
     // checar se a senha esta vazia
     if(isEmpty(data.password)) errors.password = "Senha inválida."
-    // se as senhas batem
+ 
     if(data.password !== data.confirmPassword) errors.confirmPassword = "As senhas estão divergentes"
-    // se o nome do uome inválido.
+
     if(isEmpty(data.handle)) errors.handle = "Nome inválido"
+
+    if(isEmpty(data.type)) errors.type = "Selecione uma classificação"
     if(isEmpty(data.category)) errors.category = "Selecione uma categoria"
+
     return {
         errors,
         valid: Object.keys(errors).length === 0 ? true : false
@@ -72,7 +75,6 @@ exports.validateLoginData = (data) => {
     }
 }
 
-
 exports.reduceUserDetails = (data) => {
     let userDetails = {};
 
@@ -94,7 +96,6 @@ exports.reduceUserDetails = (data) => {
     // retornar os dados formatados
     return userDetails
 }
-
 
 exports.reducePlaceDetails = (data) => {
     let placeDetails = {};

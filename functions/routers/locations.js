@@ -61,6 +61,27 @@ exports.editPlaceDetails = async (req, res) => {
     }
 }
 
+// Add/edit user details
+exports.addPlaceExtraDetails = (req, res) => {
+
+    const detail = req.body
+    console.log(detail)
+    // if(details.trim() === '') {
+    //     return res.status(403).json({error: 'Digite algo'})
+    // } else {
+    //     db.doc(`/users/${req.user.handle}`).get()
+    //     .then( (doc) => {
+    //         console.log(doc)
+    //         return res.json({message: "Details added successfully"});
+    //     })
+    //     .catch( err => {
+    //         console.error(err)
+    //         return res.status(500).json({error: err.code})
+    //     })
+    // }
+
+}
+
 // delete place
 exports.deletePlace = async (req, res) => {
     const document = db.doc(`/places/${req.params.placeId}`);
