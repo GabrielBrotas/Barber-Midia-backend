@@ -34,7 +34,10 @@ exports.validateSignupData = (data) => {
     if(isEmpty(data.handle)) errors.handle = "Nome inválido"
 
     if(isEmpty(data.type)) errors.type = "Selecione uma classificação"
-    if(isEmpty(data.category)) errors.category = "Selecione uma categoria"
+
+    if(data.type !== "Usuario") {
+        if(isEmpty(data.category)) errors.category = "Selecione uma categoria"
+    }
 
     return {
         errors,
