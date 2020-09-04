@@ -1,15 +1,12 @@
-const firebase = require('firebase')
-
 const {db} = require('../util/admin')
-const config = require('../util/config')
-const {reduceUserDetails, validateLocationData, reducePlaceDetails} = require('../util/validators')
+const {validateLocationData, reducePlaceDetails} = require('../util/validators')
 
 
 // Add new location
 exports.saveLocation = async (req, res, next) => {
 
-    const {category, description, handle, title, lat, lng} = req.body
-    const newPlace = {category, description, handle, title, lat, lng}
+    const {category, description, handle, lat, lng} = req.body
+    const newPlace = {category, description, handle, lat, lng}
 
     // função para verificar os dados
     const {valid, errors} = validateLocationData(newPlace)
@@ -22,7 +19,7 @@ exports.saveLocation = async (req, res, next) => {
         const allPlaces = await db.collection('places').get()
 
         allPlaces.forEach( doc => {
-            if (doc.data().title === title && doc.data().handle !== handle) {
+            if (doc.data().handle === handle) {
                 throw new Error('Essa barbearia já esta cadastrada. tente novamente!')
             }
         })

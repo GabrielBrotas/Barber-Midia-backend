@@ -53,9 +53,7 @@ exports.validateLocationData = (data) => {
     // checar se email vazio
     if(isEmpty(data.handle)) errors.handle = "Usuario inválido." 
     // checar se email vazio
-    if(isEmpty(data.category)) errors.category = "Categoria inválida." 
-    // checar se é um email valido
-    else if (isEmpty(data.title)) errors.title = 'Nome invalido'
+    if(isEmpty(data.category)) errors.category = "Categoria inválida."
     // checar desecrição da localização
     else if (isEmpty(data.description)) errors.title = 'Localização invalida'
 
