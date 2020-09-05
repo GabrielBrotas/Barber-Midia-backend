@@ -5,7 +5,7 @@ const {validateLocationData, reducePlaceDetails} = require('../util/validators')
 exports.saveLocation = async (req, res, next) => {
 
     const {category, description, handle, lat, lng} = req.body
-    const newPlace = {category, description, handle, lat, lng, details: []}
+    const newPlace = {category, description, handle, lat, lng, details: [], confirmed: false}
 
     const {valid, errors} = validateLocationData(newPlace)
 
@@ -87,7 +87,7 @@ exports.deletePlace = async (req, res) => {
                 // deletar o documento
                 return document.delete();
             }
-            return document.delete();
+
         })
         .then( () => {
             // retornar mensagem
@@ -99,29 +99,91 @@ exports.deletePlace = async (req, res) => {
         })
 }
 
+exports.deletePlaceDetail = (req, res) => {
+    const placeId = req.params.placeId
+    const {detail} = req.body
+    
+    db.doc(`/places/${placeId}`).get()
+    .then( doc => {
+        const allDetails = doc.data().details
+        const details = allDetails.filter( data => data !== detail)
+
+        if (doc.data().handle === req.user.handle) {
+            db.doc(`/places/${placeId}`).update({details})
+            return res.json({message: "Detalhe deletado com sucesso"});
+        } else {
+            return res.status(403).json({error: "voce nao tem autorização para fazer isso"})
+        }
+    })
+    .catch( err => {
+        console.error(err)
+        return res.status(500).json({error: err})
+    })
+
+}
+
 exports.getAllPlaces = (req, res) => {
-    // db.collection(<nome da collection>) para acessá-la
+
+    const {filter} = req.params
+
     db.collection('places')
-        // .get() para pegar todos os dados da collection
         .get()
         .then( data => {
-            // array para armazenar os dados
             let places = []
             data.forEach( doc => {
-                // para cada documento dentro dos dados colocar deentro do array criado
-                places.push({
-                    handle: doc.data().handle,
-                    category: doc.data().category,
-                    lat: doc.data().lat,
-                    lng: doc.data().lng,
-                    description: doc.data().description,
-                    title: doc.data().title,
-                    placeId: doc.data().placeId,
-                    details: doc.data().details
-                })
+                if(filter) {
+                    doc.data().category === filter &&
+                        places.push({
+                            handle: doc.data().handle,
+                            category: doc.data().category,
+                            lat: doc.data().lat,
+                            lng: doc.data().lng,
+                            description: doc.data().description,
+                            title: doc.data().title,
+                            placeId: doc.data().placeId,
+                            details: doc.data().details,
+                            confirmed: doc.data().confirmed,
+                        })
+                } else {
+                    places.push({
+                        handle: doc.data().handle,
+                        category: doc.data().category,
+                        lat: doc.data().lat,
+                        lng: doc.data().lng,
+                        description: doc.data().description,
+                        title: doc.data().title,
+                        placeId: doc.data().placeId,
+                        details: doc.data().details,
+                        confirmed: doc.data().confirmed,
+                    })
+                }
             })
-            // retornar em um json todos os dados da collection 'posts'
             return res.json(places);
         })
         .catch( err => console.error(err))
+}
+
+
+exports.getPlace = (req, res) => {
+    
+    let placeData = {}
+    
+    // db.doc pega um caminho especifico dentro da collection, nesse caso queeremos o post passado pelo id
+    db.doc(`/places/${req.params.placeId}`).get()
+        .then( doc => {
+            // se nao exister retornar um erro 404
+            if(!doc.exists){
+                return res.status(404).json({error: "local não encontrado"})
+            }
+            // armazenar os dados dentro do objeto criado
+            placeData = doc.data();
+            // adicionar o id do post ao objeto
+            placeData.placeId = doc.id;
+            
+            return res.json(placeData)
+        })
+        .catch(err => {
+            console.error(err);
+            res.status(500).json({error: err.code})
+        })
 }

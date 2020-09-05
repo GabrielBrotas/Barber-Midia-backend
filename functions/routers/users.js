@@ -174,26 +174,37 @@ exports.verifyAccount = (req, res) => {
         .get()
         .then( async user => {
             if(user.exists) {
-                    // esperar criar um usuario com o email e senha passado
-                    try{
-                        const data = await firebase
-                        // autenticar
-                        .auth()
-                        // criar um novo usuario que possa se autenticar
-                        .createUserWithEmailAndPassword(user.data().email, user.data().password)
+                // esperar criar um usuario com o email e senha passado
+                try{
+                    const data = await firebase
+                    // autenticar
+                    .auth()
+                    // criar um novo usuario que possa se autenticar
+                    .createUserWithEmailAndPassword(user.data().email, user.data().password)
 
-                    // pegar o uid do usuario criado
-                    const userId = data.user.uid
+                // pegar o uid do usuario criado
+                const userId = data.user.uid
 
-                    // pegar o token gerado para esse usuario
-                    const userToken = data.user.getIdToken()
+                db.doc(`/users/${handle}`).update({confirmed: true, secretToken: "", userId})
+                
+                // confirmar localização
+                if(user.data().type === "Profissional") {
+                    let placeId;
+                    const dbPlaces = await db.collection('places').get()
+                   
+                    dbPlaces.forEach( doc => {
+                        if(doc.data().handle === handle){
+                            placeId = doc.data().placeId    
+                        }
+                    })
+                    await db.doc(`/places/${placeId}`).update({confirmed: true})
+                }
 
-                    db.doc(`/users/${handle}`).update({confirmed: true, secretToken: "", userId})
 
-                    return res.redirect(`http://localhost:3000/verify/${handle}&token=${token}`)
-                    } catch (err) {
-                        return res.status(201).json({err} )
-                    }
+                return res.redirect(`http://localhost:3000/verify/${handle}&token=${token}`)
+                } catch (err) {
+                    return res.status(201).json({err} )
+                }
             } else {
                 return res.status(400).json({error: 'Esta conta não existe'})
             }

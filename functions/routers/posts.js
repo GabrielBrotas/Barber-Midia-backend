@@ -146,7 +146,6 @@ exports.deleteOnePost = (req, res) => {
                 // deletar o documento
                 return document.delete();
             }
-            return document.delete();
         })
         .then( () => {
             // retornar mensagem
@@ -318,7 +317,6 @@ exports.deleteComment = (req, res) => {
                 // deletar o documento
                 return document.delete();
             }
-            return document.delete();
         })
         .then( () => {
             // retornar mensagem

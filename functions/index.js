@@ -40,6 +40,8 @@ const {
   saveLocation,
   editPlaceDetails,
   deletePlace,
+  deletePlaceDetail,
+  getPlace,
   addPlaceExtraDetails
 } = require('./routers/locations')
 
@@ -86,16 +88,20 @@ app.get('/user/:handle', getUserDetails)
 app.post('/notifications', FirebaseAuth, markNotificationsRead)
 
 // * Locations Router
+// pegar locais
+app.get('/places/?:filter?', getAllPlaces)
 // pegar local
-app.get('/places', getAllPlaces)
+app.get('/place/:placeId', getPlace)
 // registrar locaiton
 app.post('/savelocation', saveLocation)
 // adicionar detalhes extras
 app.post('/place/:placeId', FirebaseAuth, addPlaceExtraDetails)
+// deletar detalhe
+app.post('/placedetail/:placeId', FirebaseAuth, deletePlaceDetail)
 // editar locaiton
 app.post('/editlocation/:placeId', FirebaseAuth, editPlaceDetails)
 // delete place
-app.post('/deletelocation/:placeId', FirebaseAuth, deletePlace)
+app.delete('/deletelocation/:placeId', FirebaseAuth, deletePlace)
 
 
 exports.api = functions.https.onRequest(app)
