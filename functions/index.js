@@ -91,7 +91,7 @@ app.get('/places', getAllPlaces)
 // registrar locaiton
 app.post('/savelocation', saveLocation)
 // adicionar detalhes extras
-app.post('/place', FirebaseAuth, addPlaceExtraDetails)
+app.post('/place/:placeId', FirebaseAuth, addPlaceExtraDetails)
 // editar locaiton
 app.post('/editlocation/:placeId', FirebaseAuth, editPlaceDetails)
 // delete place

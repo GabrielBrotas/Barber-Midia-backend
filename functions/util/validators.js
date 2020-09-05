@@ -108,4 +108,3 @@ exports.reducePlaceDetails = (data) => {
     return placeDetails
 }
 
-

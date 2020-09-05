@@ -2,11 +2,10 @@ const {db} = require('../util/admin')
 const {validateLocationData, reducePlaceDetails} = require('../util/validators')
 
 
-// Add new location
 exports.saveLocation = async (req, res, next) => {
 
     const {category, description, handle, lat, lng} = req.body
-    const newPlace = {category, description, handle, lat, lng}
+    const newPlace = {category, description, handle, lat, lng, details: []}
 
     const {valid, errors} = validateLocationData(newPlace)
 
@@ -31,7 +30,6 @@ exports.saveLocation = async (req, res, next) => {
 
 }
 
-// Add/update user place
 exports.editPlaceDetails = async (req, res) => {
     // vai pegar os dados formatados que o usuario passou para editar a descrição
     let placeDetails = reducePlaceDetails(req.body)
@@ -46,28 +44,33 @@ exports.editPlaceDetails = async (req, res) => {
     }
 }
 
-// Add/edit user details
 exports.addPlaceExtraDetails = (req, res) => {
+    const placeId = req.params.placeId
+    const {detail} = req.body
 
-    const detail = req.body
-    console.log(detail)
-    // if(details.trim() === '') {
-    //     return res.status(403).json({error: 'Digite algo'})
-    // } else {
-    //     db.doc(`/users/${req.user.handle}`).get()
-    //     .then( (doc) => {
-    //         console.log(doc)
-    //         return res.json({message: "Details added successfully"});
-    //     })
-    //     .catch( err => {
-    //         console.error(err)
-    //         return res.status(500).json({error: err.code})
-    //     })
-    // }
+    if(detail.trim() === '') {
+        return res.status(403).json({error: 'Digite algo'})
+    } else {
+        db.doc(`/places/${placeId}`).get()
+        .then( async (doc) => {
+            details = doc.data().details
+            details.push(detail)
+            if (doc.data().handle === req.user.handle) {
+                await db.doc(`/places/${placeId}`).update({details})
+                return res.json({message: "Details added successfully"});
+            } else {
+                return res.status(403).json({error: "voce nao tem autorização para fazer isso"})
+            }
+            
+        })
+        .catch( err => {
+            console.error(err)
+            return res.status(500).json({error: err.code})
+        })
+    }
 
 }
 
-// delete place
 exports.deletePlace = async (req, res) => {
     const document = db.doc(`/places/${req.params.placeId}`);
 
@@ -96,7 +99,6 @@ exports.deletePlace = async (req, res) => {
         })
 }
 
-// take users place
 exports.getAllPlaces = (req, res) => {
     // db.collection(<nome da collection>) para acessá-la
     db.collection('places')
@@ -114,7 +116,8 @@ exports.getAllPlaces = (req, res) => {
                     lng: doc.data().lng,
                     description: doc.data().description,
                     title: doc.data().title,
-                    placeId: doc.data().placeId
+                    placeId: doc.data().placeId,
+                    details: doc.data().details
                 })
             })
             // retornar em um json todos os dados da collection 'posts'

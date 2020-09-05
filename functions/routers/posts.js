@@ -63,7 +63,7 @@ exports.addNewPost = (req, res) => {
         return res.status(400).json({general: "O conteúdo não pode estar vazio"})
     }
 
-    const {bodyText, bodyImage = null} = req.body
+    const {bodyText, bodyImage = null, placeId} = req.body
 
     const newPost = {
         bodyImage,
