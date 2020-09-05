@@ -51,8 +51,6 @@ exports.validateLocationData = (data) => {
     let errors = {}
 
     // checar se email vazio
-    if(isEmpty(data.handle)) errors.handle = "Usuario inválido." 
-    // checar se email vazio
     if(isEmpty(data.category)) errors.category = "Categoria inválida."
     // checar desecrição da localização
     else if (isEmpty(data.description)) errors.title = 'Localização invalida'
@@ -103,7 +101,6 @@ exports.reducePlaceDetails = (data) => {
 
     if(!isEmpty(data.category.trim())) placeDetails.category = data.category
     if(!isEmpty(data.description.trim())) placeDetails.description = data.description
-    if(!isEmpty(data.title.trim())) placeDetails.title = data.title
 
     if(data.lat) placeDetails.lat  = data.lat
     if(data.lng) placeDetails.lng = data.lng

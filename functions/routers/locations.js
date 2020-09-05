@@ -8,34 +8,22 @@ exports.saveLocation = async (req, res, next) => {
     const {category, description, handle, lat, lng} = req.body
     const newPlace = {category, description, handle, lat, lng}
 
-    // função para verificar os dados
     const {valid, errors} = validateLocationData(newPlace)
 
-    // se nao tiver valido retornar os erros...
     if(!valid) return res.status(400).json(errors)
     
     try {
-        // doc passando o caminho da collection e pegar o dado dessa collection com o nome do user handle
-        const allPlaces = await db.collection('places').get()
-
-        allPlaces.forEach( doc => {
-            if (doc.data().handle === handle) {
-                throw new Error('Essa barbearia já esta cadastrada. tente novamente!')
-            }
-        })
-
         db.collection('places')
-        .add(newPlace)
-        .then( (doc) => {
-            const newPlaceResponse = newPlace;
-            // adicionar o Id do documento criado no objeto
-            newPlaceResponse.placeId = doc.id;
-            doc.update(newPlaceResponse)
-            res.json(newPlaceResponse)
-        }).catch( err => {
-            res.status(500).json({error: 'Algo deu errado ! ' + err})
-            console.error(err)
-        })
+            .add(newPlace)
+            .then( (doc) => {
+                const newPlaceResponse = newPlace;
+                newPlaceResponse.placeId = doc.id;
+                doc.update(newPlaceResponse)
+                res.json(newPlaceResponse)
+            }).catch( err => {
+                res.status(500).json({error: 'Algo deu errado ! ' + err})
+                console.error(err)
+            })
 
     } catch(err) {
         next(err)
