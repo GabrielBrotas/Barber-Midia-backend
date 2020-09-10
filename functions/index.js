@@ -45,6 +45,11 @@ const {
   addPlaceExtraDetails
 } = require('./routers/locations')
 
+const {
+    createChat,
+    sendMessage
+} = require('./routers/chat')
+
 // *Posts router
 // acessar o database e pegar todos os posts
 app.get('/posts', getAllPosts)
@@ -103,6 +108,11 @@ app.post('/editlocation/:placeId', FirebaseAuth, editPlaceDetails)
 // delete place
 app.delete('/deletelocation/:placeId', FirebaseAuth, deletePlace)
 
+// * Chat Router
+// criar chat
+app.post('/chat', createChat)
+// enviar mensagem
+app.post('/message/:roomId', FirebaseAuth, sendMessage)
 
 exports.api = functions.https.onRequest(app)
 
@@ -274,3 +284,6 @@ exports.onPostDelete = functions.firestore.document("/posts/{postId}")
             })
             .catch( err => {console.error(err)})
 })
+
+// Quando criar um novo bate papo
+// exports.onSendMessages = db.ref('')
