@@ -66,23 +66,38 @@ exports.sendMessage = async (req, res) => {
     
 }
 
-exports.getUserChats = (req, res) => {
+exports.getUserChats = async (req, res) => {
     
-    db.collection('chats').get()
-        .then( data => {
-            let chats = [];
-
-            data.forEach( doc => {
-                if(doc.data().userOneId === req.user.uid || doc.data().userTwoId === req.user.uid) {
-                    console.log(doc.data())
-                    chats.push({
-                        chatId: doc.id,
-                    })
-                }
-            })
-
-            return res.json({chats})
-        }).catch( err => console.log(err))
+    let chats = [];
+    let userOneId, userTwoId, userOneHandle, userTwoHandle; 
+    try{
+        const chatsDB = await db.collection('chats').get()
+        const dbUsers = await db.collection('users').get()
+        chatsDB.forEach( async doc => {
+            userOneId = doc.data().userOneId
+            userTwoId = doc.data().userTwoId
+    
+            if( userOneId === req.user.uid || userTwoId === req.user.uid) {
+      
+                dbUsers.forEach( doc => {
+                    if(doc.data().userId === userOneId){
+                        userOneHandle = doc.data().handle
+                    } else if (doc.data().userId === userTwoId) {
+                        userTwoHandle = doc.data().handle
+                    }
+                })
+    
+                chats.push({
+                    chatId: doc.id,
+                    userOne: userOneHandle,
+                    userTwo: userTwoHandle
+                })
+  
+        }})
+        return res.json({...chats})
+    } catch (err) {
+        res.json({err})
+    }
 }
 
 exports.getChatMessages = (req, res) => {
