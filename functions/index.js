@@ -46,8 +46,10 @@ const {
 } = require('./routers/locations')
 
 const {
-    createChat,
-    sendMessage
+    startChat,
+    sendMessage,
+    getUserChats,
+    getChatMessages
 } = require('./routers/chat')
 
 // *Posts router
@@ -109,8 +111,12 @@ app.post('/editlocation/:placeId', FirebaseAuth, editPlaceDetails)
 app.delete('/deletelocation/:placeId', FirebaseAuth, deletePlace)
 
 // * Chat Router
+// pegar os chats
+app.get('/chat', FirebaseAuth, getUserChats)
+// pegar as mensagens de um chat
+app.get('/chat/:chatId', FirebaseAuth, getChatMessages)
 // criar chat
-app.post('/chat', createChat)
+app.post('/chat', FirebaseAuth, startChat)
 // enviar mensagem
 app.post('/message/:roomId', FirebaseAuth, sendMessage)
 
