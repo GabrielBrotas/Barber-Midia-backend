@@ -118,7 +118,7 @@ app.get('/chat/:chatId', FirebaseAuth, getChatMessages)
 // criar chat
 app.post('/chat', FirebaseAuth, startChat)
 // enviar mensagem
-app.post('/message/:roomId', FirebaseAuth, sendMessage)
+app.post('/message/:chatId', FirebaseAuth, sendMessage)
 
 exports.api = functions.https.onRequest(app)
 
@@ -258,7 +258,7 @@ exports.onPostDelete = functions.firestore.document("/posts/{postId}")
         const postId = context.params.postId;
         // armazenar os commit
         const batch = db.batch();
-
+ 
         // pegar todos os comentarios que são do post
         return db.collection('comments').where('postId', '==', postId).get()
             .then( data => {
@@ -290,6 +290,3 @@ exports.onPostDelete = functions.firestore.document("/posts/{postId}")
             })
             .catch( err => {console.error(err)})
 })
-
-// Quando criar um novo bate papo
-// exports.onSendMessages = db.ref('')

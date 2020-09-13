@@ -19,9 +19,10 @@ exports.startChat = async (req, res) => {
                 }
             })
         })
-
+        
         if(!checkIfChatExist) {
-            const chat = await db.collection('chats').add({userOneId, userTwoId})
+            const updatedAt = admin.firestore.Timestamp.now()
+            const chat = await db.collection('chats').add({userOneId, userTwoId, updatedAt})
             return res.status(200).json({chatId: chat.id, messages: []})
         } else {
             db.collection('chats').doc(chatId)
@@ -50,16 +51,18 @@ exports.startChat = async (req, res) => {
 exports.sendMessage = async (req, res) => {
 
     const {message} = req.body
-    const {roomId} = req.params
+    const {chatId} = req.params
 
     try{
-        await db.collection('chats').doc(roomId).collection('messages').add({
+        const userId = req.user.uid 
+        const timestamp = admin.firestore.Timestamp.now()
+        await db.collection('chats').doc(chatId).update({updatedAt: admin.firestore.Timestamp.now()})
+        await db.collection('chats').doc(chatId).collection('messages').add({
             message,
-            userId: req.user.uid,
-            timestamp: admin.firestore.Timestamp.now()
+            userId,
+            timestamp 
         })
-        res.status(200).json({chatId: roomId, message})
-
+        res.status(200).json({userId, message, timestamp})
     } catch (err) {
         res.status(500).json({error: "Something went wrong"})
     }
@@ -71,7 +74,7 @@ exports.getUserChats = async (req, res) => {
     let chats = [];
     let userOneId, userTwoId, userOneHandle, userTwoHandle; 
     try{
-        const chatsDB = await db.collection('chats').get()
+        const chatsDB = await db.collection('chats').orderBy("updatedAt", 'desc').get()
         const dbUsers = await db.collection('users').get()
         chatsDB.forEach( async doc => {
             userOneId = doc.data().userOneId
@@ -94,7 +97,7 @@ exports.getUserChats = async (req, res) => {
                 })
   
         }})
-        return res.json({...chats})
+        return res.json([...chats])
     } catch (err) {
         res.json({err})
     }
